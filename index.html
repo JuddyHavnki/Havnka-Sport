@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HAVNKA SPORT | V12 PRO - DEVELOPER: JUDY SHAKR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    
+    <style>
+        /* PROJECT: HAVNKA SPORT V12 PRO
+           DEVELOPER: JUDY SHAKR
+           FEATURES: FIREBASE REAL-TIME, BADGES, LIVE MATCHES, PRO SYSTEM
+        */
+
+        @font-face { font-family: 'NRT'; src: local('NRT Reg'), local('NRT'); }
+
+        :root {
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.2);
+            --bg: #020617;
+            --card: #0f172a;
+            --secondary: #1e293b;
+            --text: #f8fafc;
+            --sub: #94a3b8;
+            --danger: #f43f5e;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --border: 1px solid rgba(255, 255, 255, 0.08);
+            --chat-user: #059669;
+            --chat-other: #1e293b;
+            --modal-bg: rgba(2, 6, 23, 0.95);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'NRT', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; position: fixed; width: 100vw; font-size: 11px; }
+        ::-webkit-scrollbar { display: none; }
+
+        /* ================= AUTH & LOGIN ================= */
+        #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle at top, var(--secondary) 0%, var(--bg) 100%); z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 20px; transition: 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        .auth-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(40px); border: var(--border); width: 100%; max-width: 420px; padding: 35px; border-radius: 40px; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
+        .auth-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, var(--primary), transparent 30%); animation: rotate 4s linear infinite; opacity: 0.1; z-index: -1; }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        .auth-input { width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); padding: 18px; border-radius: 18px; color: #fff; text-align: center; margin: 15px 0; font-size: 13px; transition: 0.3s; }
+        .auth-input:focus { border-color: var(--primary); outline:none; box-shadow: 0 0 20px var(--primary-glow); }
+        
+        .fav-team-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; max-height: 150px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 20px; border: var(--border); }
+        .fav-option { cursor: pointer; border-radius: 12px; padding: 8px; border: 2px solid transparent; transition: 0.3s; display: flex; align-items: center; justify-content: center; position: relative; }
+        .fav-option img { width: 35px; height: 35px; object-fit: contain; z-index: 2; }
+        .fav-option.selected { border-color: var(--primary); background: var(--primary-glow); transform: scale(1.1); box-shadow: 0 5px 15px var(--primary-glow); }
+        .btn-start { background: linear-gradient(135deg, var(--primary), #059669); color: #fff; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 900; cursor: pointer; font-size:15px; margin-top: 10px; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* ================= HEADER ================= */
+        header { height: 75px; background: rgba(15, 23, 42, 0.9); border-bottom: var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; backdrop-filter: blur(20px); z-index: 9000; position: relative; }
+        .logo-box { font-size: 19px; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .logo-box span { font-size: 10px; color: var(--primary); background: var(--primary-glow); padding: 2px 8px; border-radius: 6px; }
+        .dev-badge { font-size: 9px; color: var(--warning); border: 1px solid var(--warning); padding: 4px 10px; border-radius: 6px; margin-right: 10px; font-weight: 800; background: rgba(245, 158, 11, 0.05); }
+
+        /* ================= MAIN SCROLLER ================= */
+        main { height: calc(100vh - 155px); overflow-y: auto; padding: 20px; padding-bottom: 120px; scroll-behavior: smooth; }
+        .view { display: none; opacity: 0; transform: translateY(15px); transition: 0.4s ease-out; animation: fadeIn 0.4s forwards; }
+        .view.active { display: block; opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* ================= HOME VIEW ================= */
+        .fav-banner { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 25px; padding: 22px; margin-bottom: 25px; border: var(--border); display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .fav-logo-bg { width: 75px; height: 75px; background: rgba(255,255,255,0.05); border-radius: 22px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; }
+        .fav-logo-bg img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+        .fav-info h3 { font-size: 19px; font-weight: 900; color: var(--primary); margin: 3px 0; }
+        
+        /* PREDICTION CARD */
+        .predict-card { background: var(--card); border: var(--border); border-radius: 25px; padding: 20px; margin-bottom: 20px; border-right: 4px solid var(--warning); position: relative; overflow: hidden; transition: 0.3s; }
+        .predict-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .match-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .team-mini { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 30%; text-align: center; }
+        .team-mini img { width: 45px; height: 45px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3)); }
+        .predict-inputs { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; }
+        .p-input { width: 45px; height: 45px; background: var(--secondary); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; text-align: center; font-size: 18px; font-weight: 900; transition: 0.3s; }
+        .p-input:focus { border-color: var(--warning); box-shadow: 0 0 10px rgba(245,158,11,0.2); outline: none; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .btn-predict { background: var(--warning); color: #000; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 900; margin-top: 15px; width: 100%; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-predict:active { transform: scale(0.98); }
+
+        /* ================= CHAT & FRIENDS ================= */
+        .chat-layout { height: calc(100vh - 250px); display: flex; flex-direction: column; background: var(--card); border-radius: 28px; border: var(--border); overflow: hidden; position: relative; }
+        .chat-header-actions { display: flex; background: rgba(0,0,0,0.2); border-bottom: var(--border); padding: 5px; }
+        .chat-action-btn { flex: 1; padding: 14px; text-align: center; font-weight: 800; color: var(--sub); cursor: pointer; transition: 0.3s; border-radius: 15px; }
+        .chat-action-btn.active { color: var(--primary); background: var(--primary-glow); }
+
+        .friends-list { padding: 15px; overflow-y: auto; flex: 1; }
+        .friend-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 18px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+        .friend-item:hover { background: rgba(255,255,255,0.08); }
+        .add-friend-box { padding: 15px; border-bottom: var(--border); display: flex; gap: 10px; background: rgba(0,0,0,0.2); }
+        .friend-input { flex: 1; background: var(--secondary); border: 1px solid rgba(255,255,255,0.05); padding: 12px 18px; border-radius: 12px; color: #fff; font-size: 12px; }
+
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); scroll-behavior: smooth; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 12px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; animation: popIn 0.3s ease-out forwards; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        .msg-badge { font-size: 8px; background: var(--warning); color: #000; padding: 2px 6px; border-radius: 4px; margin-right: 6px; vertical-align: middle; font-weight: 900; }
+        .msg.me { align-self: flex-start; background: var(--chat-user); color: #fff; border-bottom-right-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .msg.other { align-self: flex-end; background: var(--chat-other); color: #fff; border-bottom-left-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .msg-time { display: block; font-size: 8px; opacity: 0.6; margin-top: 5px; text-align: left; }
+
+        /* ================= LEAGUE SELECTOR ================= */
+        .league-scroller { display: flex; gap: 18px; overflow-x: auto; padding: 5px 5px 20px 5px; margin-bottom: 10px; }
+        .league-tab { padding: 12px 24px; background: var(--card); border: var(--border); border-radius: 100px; white-space: nowrap; color: var(--sub); font-weight: 800; cursor: pointer; transition: 0.3s; min-width: 110px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .league-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 20px var(--primary-glow); }
+
+        /* ================= TABLES & STATS ================= */
+        .stats-title { font-size: 14px; font-weight: 900; color: var(--primary); margin: 25px 0 15px; display: flex; align-items: center; gap: 12px; background: var(--primary-glow); padding: 10px 15px; border-radius: 12px; }
+        .player-row { background: var(--card); border: var(--border); padding: 14px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; transition: 0.3s; }
+        .player-row:hover { background: var(--secondary); border-color: var(--primary); }
+        .p-info b { display: block; font-size: 13px; margin-bottom: 2px; color: #fff; }
+        .p-info span { color: var(--sub); font-size: 10px; }
+        .p-val { background: var(--primary-glow); color: var(--primary); padding: 6px 14px; border-radius: 12px; font-weight: 900; font-size: 15px; border: 1px solid rgba(16, 185, 129, 0.2); text-align:center; min-width:60px; }
+
+        /* ================= TEAMS ================= */
+        .team-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding-bottom: 20px; }
+        .team-card { background: var(--card); border: var(--border); border-radius: 25px; padding: 25px; text-align: center; cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+        .team-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, transparent, rgba(16, 185, 129, 0.1)); opacity: 0; transition: 0.3s; }
+        .team-card:hover { transform: scale(1.05); border-color: var(--primary); background: var(--secondary); z-index: 2; }
+        .team-card:hover::after { opacity: 1; }
+        .team-card img { width: 55px; height: 55px; object-fit: contain; margin-bottom: 12px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3)); transition: 0.3s; }
+        .team-card:hover img { transform: translateY(-5px) scale(1.1); }
+
+        /* ================= NAVIGATION (6 TABS) ================= */
+        nav { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(15, 23, 42, 0.95); border-top: var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; backdrop-filter: blur(25px); z-index: 9999; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--sub); text-decoration: none; cursor: pointer; transition: 0.3s; width: 50px; position: relative; }
+        .nav-link::before { content: ''; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 25px; height: 4px; background: var(--primary); border-radius: 0 0 5px 5px; opacity: 0; transition: 0.3s; }
+        .nav-link.active { color: var(--primary); transform: translateY(-8px); }
+        .nav-link.active::before { opacity: 1; }
+        .nav-link i { font-size: 22px; font-style: normal; filter: drop-shadow(0 0 5px transparent); transition: 0.3s; }
+        .nav-link.active i { filter: drop-shadow(0 0 8px var(--primary-glow)); transform: scale(1.1); }
+        .nav-link span { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ================= MODALS & SETTINGS ================= */
+        .modal { position: fixed; inset: 0; background: var(--modal-bg); backdrop-filter: blur(10px); z-index: 100001; transform: translateY(100%); transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; }
+        .modal.open { transform: translateY(0); }
+        .modal-header { padding: 25px; border-bottom: var(--border); display: flex; align-items: center; gap: 15px; background: rgba(15, 23, 42, 0.9); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+        .btn-close { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .btn-close:hover { background: var(--danger); border-color: var(--danger); }
+
+        .settings-user-card { background: linear-gradient(135deg, var(--card), var(--secondary)); padding: 30px; border-radius: 35px; text-align: center; border: var(--border); margin-bottom: 25px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+        .points-badge { position: absolute; top: 20px; right: 20px; background: var(--warning); color: #000; padding: 5px 15px; border-radius: 100px; font-weight: 900; font-size: 12px; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+        .dev-tag { background: #fff; color: #000; padding: 5px 15px; border-radius: 100px; font-weight: 900; font-size: 10px; display: inline-block; margin-top: 12px; box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
+
+        /* TOAST NOTIFICATIONS */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100005; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: rgba(15, 23, 42, 0.95); border: 1px solid var(--primary); color: #fff; padding: 12px 25px; border-radius: 100px; font-size: 11px; font-weight: 800; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(10px); animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.4s 2.6s forwards; }
+        .toast.error { border-color: var(--danger); background: rgba(244, 63, 94, 0.1); color: var(--danger); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
+
+        /* CUSTOM LOADERS */
+        .loader-box { text-align: center; padding: 50px 20px; color: var(--sub); }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h1 style="font-size:38px; font-weight:900; margin-bottom:5px; color:#fff; text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);">HAVNKA <span style="color:var(--primary);">SPORT</span></h1>
+            <p style="color:var(--sub); font-size:10px; font-weight:800; letter-spacing:3px; margin-bottom:25px;">PREMIUM V12 PRO EDITION</p>
+            
+            <div id="auth-forms">
+                <input type="text" id="login-name" class="auth-input" placeholder="ناوی بەکارهێنەر (بۆ میوان)...">
+                
+                <div style="text-align:right; margin:15px 5px 10px 0; font-weight:800; color:var(--sub); font-size:11px; display:flex; justify-content:space-between;">
+                    <span>یانەی دڵخواز هەڵبژێرە:</span>
+                    <span id="selected-team-text" style="color:var(--primary);">هەڵنەبژێردراوە</span>
+                </div>
+                
+                <div class="fav-team-selector" id="fav-selector"></div>
+
+                <button class="btn-start" onclick="loginAsGuest()" id="btn-guest">چوونەژوورەوەی میوان 👤</button>
+                <button class="btn-start" onclick="loginWithGoogle()" id="btn-google" style="background: linear-gradient(135deg, #ea4335, #c5221f); margin-top:12px; box-shadow: 0 10px 20px rgba(234, 67, 53, 0.3);">
+                    چوونەژوورەوە بە Google 🌐
+                </button>
+            </div>
+
+            <div style="margin-top:25px; display:flex; align-items:center; justify-content:center; gap:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:15px;">
+                <span style="width:10px; height:10px; background:var(--success); border-radius:50%; box-shadow:0 0 10px var(--success);"></span>
+                <span style="font-size:10px; color:var(--sub); font-weight:800;">سێرڤەرەکانی پڕۆ کاردەکەن</span>
+            </div>
+            
+            <p style="margin-top:15px; font-size:10px; color:var(--sub); font-weight:800;">DEVELOPER: <span style="color:var(--primary);">JUDY SHAKR</span></p>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo-box">HAVNKA <span>SPORT</span></div>
+        <div style="display:flex; align-items:center;">
+            <div class="dev-badge">DEV: JUDY SHAKR</div>
+            <div id="points-display-header" style="background:var(--warning); color:#000; padding:6px 14px; border-radius:10px; font-weight:900; font-size:11px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);">0 PTS</div>
+        </div>
+    </header>
+
+    <main id="scroller">
+        
+        <div id="v-home" class="view active">
+            <div class="fav-banner">
+                <div class="fav-logo-bg"><img id="home-fav-logo" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Fav Logo"></div>
+                <div class="fav-info">
+                    <p style="font-size:10px; font-weight:800; color:var(--sub); margin-bottom:4px;">بەخێربێیتەوە بۆ جیهانی پڕۆ</p>
+                    <h3 id="home-fav-name">...</h3>
+                    <div style="margin-top:8px; font-size:9px; background:var(--primary-glow); padding:5px 12px; border-radius:8px; display:inline-block; color:var(--primary); font-weight:900; letter-spacing:1px; border:1px solid rgba(16, 185, 129, 0.2);">HAVNKA V12 PRO</div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h4 style="color:#fff; font-size:14px; font-weight:900;">یارییە ڕاستەوخۆکان (پێشبینی)</h4>
+                <span style="background:rgba(244, 63, 94, 0.1); color:var(--danger); padding:4px 10px; border-radius:6px; font-size:9px; font-weight:800; border:1px solid rgba(244, 63, 94, 0.2);">LIVE MATCHES</span>
+            </div>
+
+            <div id="live-match-container">
+                <div class="loader-box"><div class="spinner"></div>وەگرتنی داتای یارییەکان...</div>
+            </div>
+            
+            <div style="background:var(--card); border:var(--border); border-radius:20px; padding:20px; margin-top:20px; text-align:center;">
+                <h4 style="color:var(--primary); font-size:13px; font-weight:900; margin-bottom:10px;">سیستەمی پۆینت و ئاست 🌟</h4>
+                <p style="color:var(--sub); font-size:10px; line-height:1.6;">بۆ هەر پێشبینییەکی ڕاست خاڵ بەدەست بهێنە. هەروەها بە ناردنی نامە لە چات خاڵت زیاد دەکات. بەرزکردنەوەی ئاست باجی نوێت پێدەبەخشێت!</p>
+            </div>
+        </div>
+
+        <div id="v-standings" class="view">
+            <div class="league-scroller">
+                <div class="league-tab active" onclick="loadStats('PD', this)">La Liga</div>
+                <div class="league-tab" onclick="loadStats('PL', this)">Premier League</div>
+                <div class="league-tab" onclick="loadStats('SA', this)">Serie A</div>
+                <div class="league-tab" onclick="loadStats('BL1', this)">Bundesliga</div>
+                <div class="league-tab" onclick="loadStats('FL1', this)">Ligue 1</div>
+                <div class="league-tab" onclick="loadStats('CL', this)">Champions League</div>
+            </div>
+            <div id="standings-data">
+                <div class="loader-box"><div class="spinner"></div>ڕیزبەندی و گۆڵکاران...</div>
+            </div>
+        </div>
+
+        <div id="v-chat" class="view">
+            <div class="chat-layout">
+                <div class="chat-header-actions">
+                    <div class="chat-action-btn active" onclick="switchChatMode('friends', this)">هاوڕێکان</div>
+                    <div class="chat-action-btn" onclick="switchChatMode('group', this)">گرووپی گشتی</div>
+                    <div class="chat-action-btn" onclick="switchChatMode('add', this)">زیادکردن</div>
+                </div>
+                
+                <div id="chat-content-area" style="flex:1; overflow-y:auto; display:flex; flex-direction:column;"></div>
+
+                <div id="chat-input-container" style="display:none; padding:15px; background:rgba(0,0,0,0.5); border-top:var(--border); gap:10px; backdrop-filter:blur(10px);">
+                    <input type="text" id="msg-input" class="chat-input" style="flex:1; background:var(--secondary); border:1px solid rgba(255,255,255,0.1); padding:14px 20px; border-radius:100px; color:#fff; font-size:12px;" placeholder="نامەکەت لێرە بنووسە..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <button onclick="sendMessage()" style="width:48px; height:48px; background:linear-gradient(135deg, var(--primary), #059669); border:none; border-radius:50%; color:#fff; cursor:pointer; font-size:18px; box-shadow:0 5px 15px rgba(16,185,129,0.3); transition:0.3s;" id="btn-send-msg">
+                        <i style="transform:rotate(-45deg); display:inline-block;">➤</i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="v-teams" class="view">
+            <div class="league-scroller">
+                <div class="league-tab active" onclick="loadTeams('PD', this)">La Liga</div>
+                <div class="league-tab" onclick="loadTeams('PL', this)">Premier League</div>
+                <div class="league-tab" onclick="loadTeams('SA', this)">Serie A</div>
+                <div class="league-tab" onclick="loadTeams('BL1', this)">Bundesliga</div>
+                <div class="league-tab" onclick="loadTeams('FL1', this)">Ligue 1</div>
+            </div>
+            <div id="teams-list" class="team-grid">
+                <div class="loader-box" style="grid-column: span 2;"><div class="spinner"></div>هێنانی لیستی یانەکان...</div>
+            </div>
+        </div>
+
+        <div id="v-leaderboard" class="view">
+            <div class="league-scroller">
+                <div class="league-tab active" onclick="loadLeaderboardsLive('PD', this)">La Liga</div>
+                <div class="league-tab" onclick="loadLeaderboardsLive('PL', this)">Premier League</div>
+                <div class="league-tab" onclick="loadLeaderboardsLive('SA', this)">Serie A</div>
+                <div class="league-tab" onclick="loadLeaderboardsLive('BL1', this)">Bundesliga</div>
+                <div class="league-tab" onclick="loadLeaderboardsLive('FL1', this)">Ligue 1</div>
+            </div>
+
+            <p style="color:var(--sub); font-size:10px; text-align:center; margin-bottom:15px;">داتاکان بە شێوەی ئۆتۆماتیکی لە API وەردەگیرێن بە زیندووی و نوێ دەبنەوە.</p>
+            
+            <div class="stats-title" style="margin-top:0;"><i>🏆</i> باشترین ١٠ یانە لە خولەکە</div>
+            <div id="top-teams-data">
+                <div class="loader-box"><div class="spinner"></div>وەگرتنی ڕیزبەندی یانەکان...</div>
+            </div>
+
+            <div class="stats-title"><i>🔥</i> باشترین ١٠ گۆڵکار و ئەسیست</div>
+            <div id="top-players-data">
+                <div class="loader-box"><div class="spinner"></div>وەگرتنی ڕیزبەندی یاریزانان...</div>
+            </div>
+        </div>
+
+        <div id="v-settings" class="view">
+            <div class="settings-user-card">
+                <div class="points-badge" id="settings-points">0 PTS</div>
+                <div style="width:90px; height:90px; background:linear-gradient(135deg, var(--primary), #059669); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:#fff; border:6px solid rgba(255,255,255,0.05); box-shadow:0 10px 20px rgba(0,0,0,0.3); position:relative;">
+                    👤
+                    <div style="position:absolute; bottom:0; right:0; width:25px; height:25px; background:var(--warning); border-radius:50%; border:3px solid var(--secondary); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; color:#000;" id="user-level-icon">1</div>
+                </div>
+                <h2 id="settings-user-name" style="font-size:24px; font-weight:900; margin-bottom:5px; text-shadow:0 2px 5px rgba(0,0,0,0.5);">...</h2>
+                <p style="color:var(--sub); font-size:11px; font-weight:800; margin-bottom:10px;" id="settings-user-badge">Novice</p>
+                <div class="dev-tag">DEVELOPER: JUDY SHAKR</div>
+            </div>
+
+            <div style="background:var(--card); border:var(--border); border-radius:28px; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+                <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">💎</i> <b style="font-size:12px;">ئاستی هەژمار</b></div>
+                    <span id="user-level-tag" style="color:var(--primary); font-weight:900; background:var(--primary-glow); padding:5px 12px; border-radius:8px;">LEVEL 1</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🛡️</i> <b style="font-size:12px;">یانەی دڵخواز</b></div>
+                    <span id="settings-fav-team" style="color:#fff; font-weight:800; display:flex; align-items:center; gap:8px;">-</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🛠️</i> <b style="font-size:12px;">خاوەن و پەرەپێدەر</b></div>
+                    <span style="color:var(--warning); font-weight:900;">JUDY SHAKR</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:20px; cursor:pointer; transition:0.3s;" onclick="clearDataAndLogout()" onmouseover="this.style.background='rgba(244, 63, 94, 0.05)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(244, 63, 94, 0.1); color:var(--danger); padding:8px; border-radius:10px;">🚪</i> <b style="color:var(--danger); font-size:12px;">چوونەدەرەوە و سڕینەوە</b></div>
+                    <span style="color:var(--danger); opacity:0.7; font-size:10px; font-weight:800;">Logout</span>
+                </div>
+            </div>
+            
+            <p style="text-align:center; color:var(--sub); font-size:9px; margin-top:30px; opacity:0.5;">HavNka Sport © 2024 - All Rights Reserved.</p>
+        </div>
+
+    </main>
+
+    <nav>
+        <div class="nav-link active" onclick="switchView('v-home', this)"><i>🏠</i><span>سەرەکی</span></div>
+        <div class="nav-link" onclick="switchView('v-standings', this)"><i>🏆</i><span>ڕیزبەندی</span></div>
+        <div class="nav-link" onclick="switchView('v-chat', this)"><i>💬</i><span>چات</span></div>
+        <div class="nav-link" onclick="switchView('v-teams', this)"><i>🛡️</i><span>یانەکان</span></div>
+        <div class="nav-link" onclick="switchView('v-leaderboard', this)"><i>🏅</i><span>گۆڵکاران</span></div>
+        <div class="nav-link" onclick="switchView('v-settings', this)"><i>⚙️</i><span>ڕێکخستن</span></div>
+    </nav>
+
+    <div id="squad-modal" class="modal">
+        <div class="modal-header">
+            <button class="btn-close" onclick="closeModal()">✕</button>
+            <div style="display:flex; align-items:center; gap:15px; flex:1;">
+                <div style="background:#fff; padding:5px; border-radius:12px;"><img id="modal-team-logo" src="" style="width:40px; height:40px; object-fit:contain;"></div>
+                <div>
+                    <h2 id="modal-team-name" style="font-size:18px; font-weight:900; color:#fff;">Team</h2>
+                    <p style="font-size:10px; color:var(--sub); font-weight:800;" id="modal-team-stadium">Stadium</p>
+                </div>
+            </div>
+        </div>
+        <div id="modal-content" style="padding:20px; padding-bottom:100px;">
+            <div class="loader-box"><div class="spinner"></div>هێنانی زانیاری پێکهاتە...</div>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================================
+           HAVNKA SPORT V12 PRO - CORE ENGINE
+           DEVELOPER: JUDY SHAKR
+           =========================================================
+        */
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDjQQ7KcOAWFWDdCsq0K9wrTq-gnz0Sjfc",
+          authDomain: "havnka-sport.firebaseapp.com",
+          databaseURL: "https://havnka-sport-default-rtdb.firebaseio.com",
+          projectId: "havnka-sport",
+          storageBucket: "havnka-sport.firebasestorage.app",
+          messagingSenderId: "935867150973",
+          appId: "1:935867150973:web:e7ecaa16520c51c807f714",
+          measurementId: "G-TC3TQZN4G3"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        const API_KEYS = [
+            "02065d812603453baad1bc059cf6d7a4", 
+            "825729c5a2b94446a3a16ce2083c23da",
+            "c537d1ec09eb4707833a90325b182743",
+            "B5c23ac9f1754b87af19f23ead43cd09",
+            "d18ce6011e82484a83a3f41c6e69bbaf",
+            "8a4bd6597d714c3b91596b65c824a0b9",
+            "aef8f12c794b4434a526a9daac8f05c9"
+        ];
+        let currentKey = 0;
+        
+        let userData = { 
+            uid: "",
+            name: "", 
+            points: 0, 
+            level: 1,
+            badge: "Novice",
+            favTeam: {}, 
+            friends: [],
+            predictions: {}
+        };
+
+        const TEAMS = [
+            {id: 86, name: "Real Madrid", logo: "https://crests.football-data.org/86.png"},
+            {id: 81, name: "Barcelona", logo: "https://crests.football-data.org/81.png"},
+            {id: 65, name: "Man City", logo: "https://crests.football-data.org/65.png"},
+            {id: 5, name: "Bayern", logo: "https://crests.football-data.org/5.png"},
+            {id: 524, name: "PSG", logo: "https://crests.football-data.org/524.png"},
+            {id: 108, name: "Inter Milan", logo: "https://crests.football-data.org/108.png"},
+            {id: 64, name: "Liverpool", logo: "https://crests.football-data.org/64.png"},
+            {id: 73, name: "Tottenham", logo: "https://crests.football-data.org/73.png"},
+            {id: 109, name: "Juventus", logo: "https://crests.football-data.org/109.png"},
+            {id: 66, name: "Man United", logo: "https://crests.football-data.org/66.png"},
+            {id: 4, name: "Dortmund", logo: "https://crests.football-data.org/4.png"},
+            {id: 78, name: "Atlético", logo: "https://crests.football-data.org/78.png"}
+        ];
+
+        const posKurdish = { "Goalkeeper": "گۆڵپارێز", "Defence": "بەرگریکار", "Midfield": "ناوەڕاست", "Offence": "هێرشبەر", "Coach": "ڕاهێنەر" };
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = type === 'success' ? `✅ ${msg}` : `⚠️ ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+        }
+
+        window.onload = () => {
+            const grid = document.getElementById('fav-selector');
+            grid.innerHTML = TEAMS.map(t => `
+                <div class="fav-option" id="fav-opt-${t.id}" onclick="selectFav(${t.id}, '${t.name}', '${t.logo}')">
+                    <img src="${t.logo}" alt="${t.name}">
+                </div>
+            `).join('');
+
+            // Auto Login - Persistence
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    db.ref('users/' + user.uid).once('value').then((snapshot) => {
+                        if (snapshot.exists()) {
+                            userData = snapshot.val();
+                            proceedToApp(userData.name, true);
+                        } else if(user.displayName) {
+                            userData.uid = user.uid;
+                            userData.name = user.displayName;
+                            proceedToApp(userData.name, true);
+                        }
+                    });
+                }
+            });
+            
+            setInterval(() => loadLeaderboardsLive('PD'), 300000);
+        };
+
+        function selectFav(id, name, logo) {
+            document.querySelectorAll('.fav-option').forEach(o => o.classList.remove('selected'));
+            const el = document.getElementById(`fav-opt-${id}`);
+            if(el) el.classList.add('selected');
+            document.getElementById('selected-team-text').innerText = name;
+            userData.favTeam = { id, name, logo };
+        }
+
+        // --- GUEST LOGIN ---
+        function loginAsGuest() {
+            const nameInput = document.getElementById('login-name').value.trim();
+            if(!nameInput) { showToast("تکایە ناوی خۆت بنووسە!", "error"); return; }
+            if(!userData.favTeam.id) { showToast("تکایە یانەی دڵخواز هەڵبژێرە!", "error"); return; }
+            if(nameInput.length < 3) { showToast("ناو دەبێت لانی کەم ٣ پیت بێت!", "error"); return; }
+
+            const btn = document.getElementById('btn-guest');
+            btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0;"></div>`;
+            btn.style.pointerEvents = "none";
+
+            auth.signInAnonymously().then((result) => {
+                const user = result.user;
+                userData.uid = user.uid;
+                db.ref('users/' + user.uid).once('value').then((snapshot) => {
+                    if (snapshot.exists()) {
+                        userData = snapshot.val();
+                        userData.name = nameInput; 
+                        saveUserDataToDB();
+                        proceedToApp(userData.name, false);
+                    } else {
+                        userData.name = nameInput;
+                        userData.points = 0;
+                        userData.level = 1;
+                        saveUserDataToDB();
+                        proceedToApp(userData.name, false);
+                    }
+                });
+            }).catch((err) => {
+                showToast(err.message, "error");
+                btn.innerHTML = "چوونەژوورەوەی میوان 👤";
+                btn.style.pointerEvents = "auto";
+            });
+        }
+
+        // --- GOOGLE LOGIN ---
+        function loginWithGoogle() {
+            if(!userData.favTeam.id) { showToast("تکایە یانەی دڵخواز هەڵبژێرە!", "error"); return; }
+
+            const btn = document.getElementById('btn-google');
+            btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0;border-top-color:#fff;"></div>`;
+            btn.style.pointerEvents = "none";
+
+            auth.signInWithPopup(googleProvider).then((result) => {
+                const user = result.user;
+                userData.uid = user.uid;
+                db.ref('users/' + user.uid).once('value').then((snapshot) => {
+                    if (snapshot.exists()) {
+                        userData = snapshot.val();
+                        saveUserDataToDB();
+                        proceedToApp(userData.name, false);
+                    } else {
+                        userData.name = user.displayName || "Google User";
+                        userData.points = 0;
+                        userData.level = 1;
+                        saveUserDataToDB();
+                        proceedToApp(userData.name, false);
+                    }
+                });
+            }).catch((err) => {
+                showToast(err.message, "error");
+                btn.innerHTML = "چوونەژوورەوە بە Google 🌐";
+                btn.style.pointerEvents = "auto";
+            });
+        }
+
+        function saveUserDataToDB() {
+            if(userData.uid) {
+                db.ref('users/' + userData.uid).set(userData);
+            }
+        }
+
+        function proceedToApp(nameInput, isAuto) {
+            document.getElementById('settings-user-name').innerText = userData.name;
+            document.getElementById('home-fav-name').innerText = userData.favTeam.name;
+            document.getElementById('home-fav-logo').src = userData.favTeam.logo;
+            document.getElementById('settings-fav-team').innerHTML = `<img src="${userData.favTeam.logo}" style="width:20px;"> ${userData.favTeam.name}`;
+            
+            updatePointsUI();
+            document.getElementById('auth-screen').style.transform = "translateY(-100%)";
+            if(!isAuto) showToast(`بەخێربێیت، ${userData.name}!`);
+
+            loadLiveMatches();
+            loadStats('PD');
+            loadTeams('PD');
+            loadLeaderboardsLive('PD'); // Load the new leaderboard
+            switchChatMode('friends', document.querySelector('.chat-action-btn'));
+        }
+
+        function clearDataAndLogout() {
+            if(confirm("ئایا دڵنیایت دەتەوێت بچیتە دەرەوە و داتاکانت بسڕیتەوە؟")) {
+                auth.signOut().then(() => {
+                    location.reload();
+                });
+            }
+        }
+
+        async function fetchAPI(endpoint) {
+            const cacheKey = `havnka_api_${endpoint}`;
+            const cached = localStorage.getItem(cacheKey);
+            if(cached) {
+                const parsed = JSON.parse(cached);
+                if(Date.now() - parsed.time < 300000) return parsed.data; // 5 min cache
+            }
+
+            try {
+                const res = await fetch(`https://api.football-data.org/v4/${endpoint}`, { 
+                    headers: {'X-Auth-Token': API_KEYS[currentKey]}
+                });
+                if(res.status === 429 || res.status === 403) { 
+                    currentKey = (currentKey + 1) % API_KEYS.length; 
+                    throw new Error("API Limit");
+                }
+                const data = await res.json();
+                localStorage.setItem(cacheKey, JSON.stringify({time: Date.now(), data: data}));
+                return data;
+            } catch(e) { 
+                return null;
+            }
+        }
+
+        async function loadLiveMatches() {
+            const container = document.getElementById('live-match-container');
+            const data = await fetchAPI('matches');
+            
+            if(!data || !data.matches) {
+                container.innerHTML = '<div class="predict-card" style="text-align:center; color:var(--danger);">نەتوانرا یارییەکان بهێنرێت، هێڵەکەت بپشکنە!</div>';
+                return;
+            }
+
+            const liveMatches = data.matches.filter(m => m.status === 'IN_PLAY' || m.status === 'TIMED' || m.status === 'PAUSED').slice(0, 4);
+
+            if(liveMatches.length === 0) {
+                container.innerHTML = `
+                    <div class="predict-card" style="text-align:center; border-right-color:var(--sub); display:flex; flex-direction:column; align-items:center; gap:10px;">
+                        <i style="font-size:30px; color:var(--sub);">⚽</i>
+                        <b style="color:#fff;">هیچ یارییەکی لایڤ بوونی نییە ئێستا</b>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = liveMatches.map(m => {
+                const isPredicted = userData.predictions && userData.predictions[`match_${m.id}`];
+                const btnState = isPredicted ? 'لە پێشبینیدایە ✓' : 'ناردنی پێشبینی 🚀';
+                const btnColor = isPredicted ? 'var(--primary)' : 'var(--warning)';
+                const btnClick = isPredicted ? '' : `onclick="submitPrediction(${m.id}, this)"`;
+
+                return `
+                <div class="predict-card" id="match-card-${m.id}">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b style="font-size:12px; color:var(--warning); display:flex; align-items:center; gap:5px;"><span class="spinner" style="width:10px;height:10px;border-width:2px;margin:0;border-top-color:var(--warning);"></span> ${m.status === 'IN_PLAY' ? 'لە یاریكردندایە' : 'یاری داهاتوو'}</b>
+                        <span style="font-size:9px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; color:#fff;">${new Date(m.utcDate).toLocaleTimeString('ku-IQ', {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <div class="match-row">
+                        <div class="team-mini"><img src="${m.homeTeam.crest}"><b>${m.homeTeam.shortName}</b></div>
+                        <div class="predict-inputs">
+                            <input type="number" id="h-score-${m.id}" class="p-input" value="${isPredicted ? isPredicted.h : '0'}" ${isPredicted ? 'disabled' : ''} oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+                            <b style="font-size:20px; color:var(--sub);">VS</b>
+                            <input type="number" id="a-score-${m.id}" class="p-input" value="${isPredicted ? isPredicted.a : '0'}" ${isPredicted ? 'disabled' : ''} oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+                        </div>
+                        <div class="team-mini"><img src="${m.awayTeam.crest}"><b>${m.awayTeam.shortName}</b></div>
+                    </div>
+                    <button class="btn-predict" style="background:${btnColor}; color:${isPredicted ? '#fff' : '#000'};" ${btnClick}>${btnState}</button>
+                </div>
+            `}).join('');
+        }
+
+        function updateXP(amount, reason = "") {
+            userData.points += amount;
+            const newLevel = Math.floor(Math.sqrt(userData.points / 20)) + 1;
+            
+            if(newLevel > userData.level) {
+                userData.level = newLevel;
+                showToast(`پیرۆزە! گەیشتیتە ئاستی ${userData.level} 🎉`, 'success');
+            }
+            
+            if(userData.level >= 20) userData.badge = "🏆 HAVNKA KING";
+            else if(userData.level >= 15) userData.badge = "🔥 Ultra Pro";
+            else if(userData.level >= 10) userData.badge = "⚡ Pro Player";
+            else if(userData.level >= 5) userData.badge = "🌟 Advanced";
+            else userData.badge = "🌱 Novice";
+
+            updatePointsUI();
+            saveUserDataToDB();
+            if(reason) showToast(`+${amount} XP (${reason})`);
+        }
+
+        function submitPrediction(matchId, btn) {
+            const hScore = document.getElementById(`h-score-${matchId}`).value;
+            const aScore = document.getElementById(`a-score-${matchId}`).value;
+            if(hScore === "" || aScore === "") { showToast("تکایە ئەنجامی هەردوو یانە دیاری بکە!", "error"); return; }
+            
+            if(!userData.predictions) userData.predictions = {};
+            userData.predictions[`match_${matchId}`] = { h: hScore, a: aScore };
+            
+            document.getElementById(`h-score-${matchId}`).disabled = true;
+            document.getElementById(`a-score-${matchId}`).disabled = true;
+            btn.style.background = "var(--primary)";
+            btn.style.color = "#fff";
+            btn.innerText = "لە پێشبینیدایە ✓";
+            btn.onclick = null;
+
+            updateXP(15, "پێشبینی یاری");
+        }
+
+        function updatePointsUI() {
+            document.getElementById('points-display-header').innerText = `${userData.points} PTS`;
+            document.getElementById('settings-points').innerText = `${userData.points} PTS`;
+            document.getElementById('user-level-tag').innerText = `LEVEL ${userData.level}`;
+            document.getElementById('user-level-icon').innerText = userData.level;
+            document.getElementById('settings-user-badge').innerText = userData.badge;
+        }
+
+        function switchChatMode(mode, btn) {
+            const content = document.getElementById('chat-content-area');
+            const inputArea = document.getElementById('chat-input-container');
+            document.querySelectorAll('.chat-action-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            inputArea.dataset.mode = mode;
+
+            if(mode === 'friends') {
+                inputArea.style.display = 'none';
+                if(!userData.friends || userData.friends.length === 0) {
+                    content.innerHTML = `<div style="text-align:center; padding:50px 20px; color:var(--sub);"><i style="font-size:40px; opacity:0.5;">👥</i><p>لیستی هاوڕێکانت چۆڵە.</p></div>`;
+                } else {
+                    content.innerHTML = `<div class="friends-list">` + userData.friends.map(f => `
+                        <div class="friend-item">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:45px; height:45px; background:linear-gradient(135deg, var(--secondary), var(--primary-glow)); border:1px solid rgba(16,185,129,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); font-size:16px;">${f.charAt(0).toUpperCase()}</div>
+                                <div><b style="font-size:14px; color:#fff;">${f}</b><span style="display:block; font-size:9px; color:var(--success);">Online</span></div>
+                            </div>
+                            <button onclick="openPrivateChat('${f}')" style="background:var(--primary); color:#fff; border:none; padding:10px 18px; border-radius:12px; font-weight:900; font-size:11px;">نامە</button>
+                        </div>
+                    `).join('') + `</div>`;
+                }
+            } else if(mode === 'add') {
+                inputArea.style.display = 'none';
+                content.innerHTML = `
+                    <div style="padding:20px;">
+                        <div style="background:var(--secondary); padding:20px; border-radius:20px; border:var(--border);">
+                            <h4 style="color:var(--primary); margin-bottom:15px; font-size:13px;">زیادکردنی هاوڕێی نوێ</h4>
+                            <div class="add-friend-box" style="padding:0; border:none; background:transparent;">
+                                <input type="text" id="find-user" class="friend-input" placeholder="ناوی هاوڕێ (نمونە: هێمن)...">
+                                <button onclick="addFriendAction()" style="background:var(--warning); border:none; color:#000; padding:0 25px; border-radius:12px; font-weight:900; cursor:pointer;">گەران</button>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if(mode === 'group') {
+                inputArea.style.display = 'flex';
+                content.innerHTML = `
+                    <div style="background:rgba(16, 185, 129, 0.1); padding:10px; text-align:center; font-size:10px; font-weight:800; color:var(--primary); border-bottom:var(--border);">🛡️ گرووپی گشتی - ڕێز لە یاساکان بگرە</div>
+                    <div class="chat-messages" id="chat-box"></div>`;
+            }
+        }
+
+        function addFriendAction() {
+            const user = document.getElementById('find-user').value.trim();
+            if(!user) { showToast("ناوی هاوڕێ بنووسە!", "error"); return; }
+            if(!userData.friends) userData.friends = [];
+            if(!userData.friends.includes(user)) {
+                userData.friends.push(user);
+                saveUserDataToDB();
+                showToast(`"${user}" زیادکرا`, "success");
+                updateXP(5, "دۆزینەوەی هاوڕێ");
+            } else { showToast("پێشتر زیاد کراوە!", "error"); }
+        }
+
+        function openPrivateChat(user) {
+            const content = document.getElementById('chat-content-area');
+            const inputArea = document.getElementById('chat-input-container');
+            document.querySelectorAll('.chat-action-btn').forEach(b => b.classList.remove('active'));
+            inputArea.style.display = 'flex';
+            inputArea.dataset.mode = `private_${user}`; 
+            content.innerHTML = `<div style="padding:15px; background:rgba(0,0,0,0.3); display:flex; align-items:center; gap:15px; border-bottom:var(--border);"><button onclick="switchChatMode('friends', document.querySelector('.chat-action-btn'))" style="background:transparent; border:none; color:var(--primary); font-size:20px;">←</button><b style="color:#fff;">${user}</b></div><div class="chat-messages" id="chat-box"></div>`;
+        }
+
+        function sendMessage() {
+            const inp = document.getElementById('msg-input');
+            const box = document.getElementById('chat-box');
+            const mode = document.getElementById('chat-input-container').dataset.mode;
+            const text = inp.value.trim();
+            if(!text) return;
+            
+            const time = new Date().toLocaleTimeString('ku-IQ', {hour: '2-digit', minute:'2-digit'});
+            box.innerHTML += `<div class="msg me"><span class="msg-badge" style="background:var(--primary); color:#fff;">LVL ${userData.level}</span> ${text} <span class="msg-time">${time}</span></div>`;
+            inp.value = "";
+            box.scrollTop = box.scrollHeight;
+            if(mode === 'group') updateXP(1); 
+        }
+
+        async function loadStats(code, btn) {
+            if(btn) { document.querySelectorAll('#v-standings .league-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
+            const container = document.getElementById('standings-data');
+            container.innerHTML = '<div class="loader-box"><div class="spinner"></div>وەگرتنی ڕیزبەندی...</div>';
+            
+            const data = await fetchAPI(`competitions/${code}/standings`);
+            if(!data) { container.innerHTML = '<div style="text-align:center; color:var(--danger); padding:30px;">کێشە لە هێنانی داتا هەیە.</div>'; return; }
+
+            let html = `<div style="overflow-x:auto; border-radius:25px; margin-bottom:30px; box-shadow:0 10px 30px rgba(0,0,0,0.3);"><table style="width:100%; border-collapse:collapse; background:var(--card); min-width:400px;"><thead style="background:rgba(255,255,255,0.05); color:var(--sub); font-size:10px;"><tr><th style="padding:15px; text-align:center;">#</th><th style="text-align:right;">یانە</th><th>Y</th><th>B</th><th>D</th><th>D</th><th style="color:var(--primary);">X</th></tr></thead><tbody>`;
+            
+            data.standings[0].table.slice(0, 20).forEach((t, i) => {
+                let posStyle = i < 4 ? "background:rgba(16,185,129,0.1); color:var(--success);" : (i >= data.standings[0].table.length - 3 ? "background:rgba(244,63,94,0.1); color:var(--danger);" : "");
+                html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.02);"><td style="padding:15px; text-align:center;"><span style="display:inline-block; padding:3px 8px; border-radius:8px; font-weight:900; ${posStyle}">${t.position}</span></td><td style="display:flex; align-items:center; gap:12px; padding:15px;"><img src="${t.team.crest}" style="width:25px; height:25px; object-fit:contain;"> <b style="font-size:12px;">${t.team.shortName}</b></td><td style="text-align:center; color:var(--sub);">${t.playedGames}</td><td style="text-align:center; color:var(--success);">${t.won}</td><td style="text-align:center; color:var(--warning);">${t.draw}</td><td style="text-align:center; color:var(--danger);">${t.lost}</td><td style="text-align:center; color:var(--primary); font-weight:900; background:rgba(16,185,129,0.05);">${t.points}</td></tr>`;
+            });
+            container.innerHTML = html + `</tbody></table></div>`;
+        }
+
+        // --- بەشی نوێی ڕیزبەندی لایڤ (یانەکان، گۆڵکاران و ئەسیست) ---
+        async function loadLeaderboardsLive(code = 'PD', btn = null) {
+            if(btn) { 
+                document.querySelectorAll('#v-leaderboard .league-tab').forEach(t => t.classList.remove('active')); 
+                btn.classList.add('active'); 
+            }
+            
+            const teamsBox = document.getElementById('top-teams-data');
+            const playersBox = document.getElementById('top-players-data');
+            
+            teamsBox.innerHTML = '<div class="loader-box"><div class="spinner"></div></div>';
+            playersBox.innerHTML = '<div class="loader-box"><div class="spinner"></div></div>';
+
+            // ١. هێنانی باشترین ١٠ یانە
+            const sData = await fetchAPI(`competitions/${code}/standings`);
+            if(sData && sData.standings) {
+                let tHtml = `<div style="overflow-x:auto; border-radius:20px; background:var(--card); margin-bottom:25px; border:var(--border);"><table style="width:100%; border-collapse:collapse;"><thead style="background:rgba(255,255,255,0.05); color:var(--sub); font-size:10px;"><tr><th style="padding:12px; text-align:center;">ڕیز</th><th style="text-align:right;">یانە</th><th style="padding:12px; text-align:center;">خاڵ</th></tr></thead><tbody>`;
+                sData.standings[0].table.slice(0, 10).forEach(t => {
+                    tHtml += `<tr style="border-bottom:1px solid rgba(255,255,255,0.02);"><td style="padding:12px; text-align:center; font-weight:900;">${t.position}</td><td style="display:flex; align-items:center; gap:10px; padding:12px;"><img src="${t.team.crest}" style="width:22px; height:22px;"> <b style="font-size:12px;">${t.team.shortName}</b></td><td style="text-align:center; color:var(--primary); font-weight:900; background:rgba(16,185,129,0.05);">${t.points}</td></tr>`;
+                });
+                teamsBox.innerHTML = tHtml + `</tbody></table></div>`;
+            } else {
+                teamsBox.innerHTML = '<div style="text-align:center; color:var(--danger);">نەتوانرا داتا بهێنرێت.</div>';
+            }
+
+            // ٢. هێنانی باشترین ١٠ گۆڵکار و ئەسیست
+            const pData = await fetchAPI(`competitions/${code}/scorers`);
+            if(pData && pData.scorers) {
+                let pHtml = ``;
+                pData.scorers.slice(0, 10).forEach((s, i) => {
+                    let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `<b style="color:var(--sub);">${i+1}</b>`));
+                    let assists = s.assists !== undefined && s.assists !== null ? s.assists : '-'; // بەشێک لە API بێبەرامبەرەکان ئەسیست نادەن
+                    
+                    pHtml += `
+                    <div class="player-row" style="margin-bottom:10px; border:1px solid rgba(245, 158, 11, 0.15); background:linear-gradient(135deg, var(--card), rgba(245,158,11,0.03));">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <div style="width:30px; text-align:center; font-size:18px;">${medal}</div>
+                            <div class="p-info">
+                                <b style="font-size:13px;">${s.player.name}</b>
+                                <span><img src="${s.team.crest || ''}" style="width:14px; vertical-align:middle;" onerror="this.style.display='none'"> ${s.team.name}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <div class="p-val" style="background:var(--warning); color:#000; border:none; box-shadow:0 4px 10px rgba(245,158,11,0.2);">
+                                ${s.goals || 0} <span style="font-size:8px;">⚽</span>
+                            </div>
+                            <div class="p-val" style="background:var(--primary-glow); color:var(--primary); border:none;">
+                                ${assists} <span style="font-size:8px;">🎯</span>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                playersBox.innerHTML = pHtml;
+            } else {
+                playersBox.innerHTML = '<div style="text-align:center; color:var(--danger);">نەتوانرا داتا بهێنرێت.</div>';
+            }
+        }
+
+        async function loadTeams(code, btn) {
+            if(btn) { document.querySelectorAll('#v-teams .league-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
+            const box = document.getElementById('teams-list');
+            box.innerHTML = '<div class="loader-box" style="grid-column: span 2;"><div class="spinner"></div>هێنانی یانەکان...</div>';
+            
+            const data = await fetchAPI(`competitions/${code}/teams`);
+            if(!data) { box.innerHTML = '<div style="grid-column: span 2; text-align:center; color:var(--danger);">نەتوانرا داتا بهێنرێت.</div>'; return; }
+            
+            box.innerHTML = data.teams.map(t => `<div class="team-card" onclick="openSquad(${t.id}, '${t.name.replace(/'/g, "\\'")}', '${t.crest}', '${(t.venue || 'نەزانراو').replace(/'/g, "\\'")}')"><img src="${t.crest}" loading="lazy"><b style="display:block; font-size:12px; color:#fff; margin-bottom:4px;">${t.shortName}</b><span style="font-size:9px; color:var(--sub); background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:5px;">${t.founded || 'N/A'}</span></div>`).join('');
+        }
+
+        async function openSquad(id, name, logo, venue) {
+            const modal = document.getElementById('squad-modal');
+            const content = document.getElementById('modal-content');
+            document.getElementById('modal-team-name').innerText = name;
+            document.getElementById('modal-team-logo').src = logo;
+            document.getElementById('modal-team-stadium').innerText = `🏟️ ${venue}`;
+            modal.classList.add('open');
+            content.innerHTML = '<div class="loader-box"><div class="spinner"></div>هێنانی پێکهاتە...</div>';
+            
+            const data = await fetchAPI(`teams/${id}`);
+            if(!data) { content.innerHTML = '<div style="text-align:center;">کێشە لە داتا هەیە</div>'; return; }
+            
+            let h = ``;
+            if(data.coach && data.coach.name) {
+                h += `<div class="stats-title" style="background:rgba(245, 158, 11, 0.1); color:var(--warning);">👔 دەستەی ڕاهێنان</div><div style="padding:18px; background:linear-gradient(135deg, var(--secondary), rgba(245,158,11,0.05)); border:1px solid rgba(245,158,11,0.2); border-radius:20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;"><div><b style="font-size:14px; color:#fff; display:block;">${data.coach.name}</b><span style="font-size:10px; color:var(--sub);">${data.coach.nationality}</span></div><span style="background:var(--warning); color:#000; padding:5px 12px; border-radius:8px; font-weight:900; font-size:10px;">ڕاهێنەر</span></div>`;
+            }
+
+            h += `<div class="stats-title">👕 پێکهاتەی یاریزانان</div>`;
+            if(!data.squad || data.squad.length === 0) { h += `<div style="text-align:center; color:var(--sub);">لیست بەردەست نییە.</div>`; } 
+            else {
+                const grouped = { "Goalkeeper": [], "Defence": [], "Midfield": [], "Offence": [] };
+                data.squad.forEach(p => { if(grouped[p.position]) grouped[p.position].push(p); else if(p.position) grouped["Midfield"].push(p); });
+                const posColors = {"Goalkeeper": "#eab308", "Defence": "#3b82f6", "Midfield": "#10b981", "Offence": "#f43f5e"};
+
+                ["Goalkeeper", "Defence", "Midfield", "Offence"].forEach(pos => {
+                    if(grouped[pos].length > 0) {
+                        h += `<div style="font-size:11px; font-weight:900; color:${posColors[pos]}; margin:15px 0 10px 5px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${posColors[pos]}; margin-left:5px;"></span>${posKurdish[pos]}</div>`;
+                        grouped[pos].forEach(p => {
+                            h += `<div style="padding:15px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:18px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;"><div><b style="color:#fff; font-size:13px;">${p.name}</b><span style="display:block; font-size:9px; color:var(--sub);">${p.nationality}</span></div>${p.shirtNumber ? `<div style="width:30px; height:30px; background:rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:900; color:#fff;">${p.shirtNumber}</div>` : ''}</div>`;
+                        });
+                    }
+                });
+            }
+            content.innerHTML = h;
+        }
+
+        function closeModal() { document.getElementById('squad-modal').classList.remove('open'); }
+
+        function switchView(id, btn) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            setTimeout(() => document.getElementById(id).classList.add('active'), 50);
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('scroller').scrollTop = 0;
+        }
+
+    </script>
+</body>
+</html>
