@@ -12,7 +12,7 @@
     <style>
         /* PROJECT: HAVNKA SPORT V12 PRO
            DEVELOPER: JUDY SHAKR
-           FEATURES: FIREBASE REAL-TIME, BADGES, LIVE MATCHES, PRO SYSTEM
+           FEATURES: FIREBASE REAL-TIME, BADGES, LIVE MATCHES, PRO SYSTEM, TOP 1 PREDICTOR
         */
 
         @font-face { font-family: 'NRT'; src: local('NRT Reg'), local('NRT'); }
@@ -126,15 +126,15 @@
         .team-card img { width: 55px; height: 55px; object-fit: contain; margin-bottom: 12px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.3)); transition: 0.3s; }
         .team-card:hover img { transform: translateY(-5px) scale(1.1); }
 
-        /* ================= NAVIGATION (6 TABS) ================= */
+        /* ================= NAVIGATION (7 TABS) ================= */
         nav { position: fixed; bottom: 0; width: 100%; height: 85px; background: rgba(15, 23, 42, 0.95); border-top: var(--border); display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; backdrop-filter: blur(25px); z-index: 9999; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
-        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--sub); text-decoration: none; cursor: pointer; transition: 0.3s; width: 50px; position: relative; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--sub); text-decoration: none; cursor: pointer; transition: 0.3s; width: 48px; position: relative; }
         .nav-link::before { content: ''; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 25px; height: 4px; background: var(--primary); border-radius: 0 0 5px 5px; opacity: 0; transition: 0.3s; }
         .nav-link.active { color: var(--primary); transform: translateY(-8px); }
         .nav-link.active::before { opacity: 1; }
-        .nav-link i { font-size: 22px; font-style: normal; filter: drop-shadow(0 0 5px transparent); transition: 0.3s; }
+        .nav-link i { font-size: 20px; font-style: normal; filter: drop-shadow(0 0 5px transparent); transition: 0.3s; }
         .nav-link.active i { filter: drop-shadow(0 0 8px var(--primary-glow)); transform: scale(1.1); }
-        .nav-link span { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+        .nav-link span { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0px; white-space: nowrap; }
 
         /* ================= MODALS & SETTINGS ================= */
         .modal { position: fixed; inset: 0; background: var(--modal-bg); backdrop-filter: blur(10px); z-index: 100001; transform: translateY(100%); transition: 0.5s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; }
@@ -297,6 +297,15 @@
             </div>
         </div>
 
+        <div id="v-top-predictors" class="view">
+            <div class="stats-title" style="justify-content:center; font-size:16px;"><i>👑</i> باشترین پێشبینیکاران (TOP 1)</div>
+            <p style="color:var(--sub); font-size:10px; text-align:center; margin-bottom:20px;">ئەو بەکارهێنەرانەی زۆرترین خاڵیان هەیە لە سیستەمەکەدا</p>
+            
+            <div id="top-predictors-list">
+                <div class="loader-box"><div class="spinner"></div>هێنانی باشترینەکان...</div>
+            </div>
+        </div>
+
         <div id="v-settings" class="view">
             <div class="settings-user-card">
                 <div class="points-badge" id="settings-points">0 PTS</div>
@@ -339,6 +348,7 @@
         <div class="nav-link" onclick="switchView('v-chat', this)"><i>💬</i><span>چات</span></div>
         <div class="nav-link" onclick="switchView('v-teams', this)"><i>🛡️</i><span>یانەکان</span></div>
         <div class="nav-link" onclick="switchView('v-leaderboard', this)"><i>🏅</i><span>گۆڵکاران</span></div>
+        <div class="nav-link" onclick="switchView('v-top-predictors', this); loadTopPredictors();"><i>👑</i><span>پێشبینیکار</span></div>
         <div class="nav-link" onclick="switchView('v-settings', this)"><i>⚙️</i><span>ڕێکخستن</span></div>
     </nav>
 
@@ -383,14 +393,15 @@
         const db = firebase.database();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
+        // API Keys updated with the new 4 keys provided
         const API_KEYS = [
-            "02065d812603453baad1bc059cf6d7a4", 
-            "825729c5a2b94446a3a16ce2083c23da",
-            "c537d1ec09eb4707833a90325b182743",
-            "B5c23ac9f1754b87af19f23ead43cd09",
+            "b5c23ac9f1754b87af19f23ead43cd09",
             "d18ce6011e82484a83a3f41c6e69bbaf",
             "8a4bd6597d714c3b91596b65c824a0b9",
-            "aef8f12c794b4434a526a9daac8f05c9"
+            "aef8f12c794b4434a526a9daac8f05c9",
+            "02065d812603453baad1bc059cf6d7a4", 
+            "825729c5a2b94446a3a16ce2083c23da",
+            "c537d1ec09eb4707833a90325b182743"
         ];
         let currentKey = 0;
         
@@ -421,6 +432,7 @@
         ];
 
         const posKurdish = { "Goalkeeper": "گۆڵپارێز", "Defence": "بەرگریکار", "Midfield": "ناوەڕاست", "Offence": "هێرشبەر", "Coach": "ڕاهێنەر" };
+        let activeChatRef = null;
 
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -439,7 +451,6 @@
                 </div>
             `).join('');
 
-            // Auto Login - Persistence
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     db.ref('users/' + user.uid).once('value').then((snapshot) => {
@@ -466,7 +477,6 @@
             userData.favTeam = { id, name, logo };
         }
 
-        // --- GUEST LOGIN ---
         function loginAsGuest() {
             const nameInput = document.getElementById('login-name').value.trim();
             if(!nameInput) { showToast("تکایە ناوی خۆت بنووسە!", "error"); return; }
@@ -501,7 +511,6 @@
             });
         }
 
-        // --- GOOGLE LOGIN ---
         function loginWithGoogle() {
             if(!userData.favTeam.id) { showToast("تکایە یانەی دڵخواز هەڵبژێرە!", "error"); return; }
 
@@ -551,7 +560,8 @@
             loadLiveMatches();
             loadStats('PD');
             loadTeams('PD');
-            loadLeaderboardsLive('PD'); // Load the new leaderboard
+            loadLeaderboardsLive('PD');
+            loadTopPredictors();
             switchChatMode('friends', document.querySelector('.chat-action-btn'));
         }
 
@@ -563,18 +573,24 @@
             }
         }
 
+        // ================= CORS PROXY FIXED =================
         async function fetchAPI(endpoint) {
             const cacheKey = `havnka_api_${endpoint}`;
             const cached = localStorage.getItem(cacheKey);
             if(cached) {
                 const parsed = JSON.parse(cached);
-                if(Date.now() - parsed.time < 300000) return parsed.data; // 5 min cache
+                if(Date.now() - parsed.time < 300000) return parsed.data; 
             }
 
             try {
-                const res = await fetch(`https://api.football-data.org/v4/${endpoint}`, { 
+                const apiUrl = `https://api.football-data.org/v4/${endpoint}`;
+                const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(apiUrl);
+                
+                const res = await fetch(proxyUrl, { 
+                    method: 'GET',
                     headers: {'X-Auth-Token': API_KEYS[currentKey]}
                 });
+                
                 if(res.status === 429 || res.status === 403) { 
                     currentKey = (currentKey + 1) % API_KEYS.length; 
                     throw new Error("API Limit");
@@ -669,6 +685,7 @@
             btn.onclick = null;
 
             updateXP(15, "پێشبینی یاری");
+            loadTopPredictors(); // Update top predictors dynamically
         }
 
         function updatePointsUI() {
@@ -683,8 +700,10 @@
             const content = document.getElementById('chat-content-area');
             const inputArea = document.getElementById('chat-input-container');
             document.querySelectorAll('.chat-action-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            if(btn) btn.classList.add('active');
             inputArea.dataset.mode = mode;
+
+            if(activeChatRef) { activeChatRef.off(); activeChatRef = null; }
 
             if(mode === 'friends') {
                 inputArea.style.display = 'none';
@@ -717,43 +736,108 @@
                 inputArea.style.display = 'flex';
                 content.innerHTML = `
                     <div style="background:rgba(16, 185, 129, 0.1); padding:10px; text-align:center; font-size:10px; font-weight:800; color:var(--primary); border-bottom:var(--border);">🛡️ گرووپی گشتی - ڕێز لە یاساکان بگرە</div>
-                    <div class="chat-messages" id="chat-box"></div>`;
+                    <div class="chat-messages" id="chat-box">
+                        <div class="loader-box"><div class="spinner"></div>وەگرتنی نامەکان...</div>
+                    </div>`;
+                
+                // Real-time group chat
+                document.getElementById('chat-box').innerHTML = '';
+                activeChatRef = db.ref('chats/group');
+                activeChatRef.limitToLast(50).on('child_added', (snap) => {
+                    renderMessage(snap.val());
+                });
             }
         }
 
-        function addFriendAction() {
+        // ================= FIREBASE USER VALIDATION =================
+        async function addFriendAction() {
             const user = document.getElementById('find-user').value.trim();
             if(!user) { showToast("ناوی هاوڕێ بنووسە!", "error"); return; }
-            if(!userData.friends) userData.friends = [];
-            if(!userData.friends.includes(user)) {
+            if(user.toLowerCase() === userData.name.toLowerCase()) { showToast("ناتوانیت خۆت زیاد بکەیت!", "error"); return; }
+            if(userData.friends && userData.friends.includes(user)) { showToast("پێشتر زیاد کراوە!", "error"); return; }
+
+            const btn = document.querySelector('.add-friend-box button');
+            btn.innerText = '...'; btn.disabled = true;
+
+            const snapshot = await db.ref('users').orderByChild('name').equalTo(user).once('value');
+            
+            if(snapshot.exists()) {
+                if(!userData.friends) userData.friends = [];
                 userData.friends.push(user);
                 saveUserDataToDB();
-                showToast(`"${user}" زیادکرا`, "success");
+                showToast(`"${user}" زیادکرا بۆ لیستی هاوڕێکانت`, "success");
                 updateXP(5, "دۆزینەوەی هاوڕێ");
-            } else { showToast("پێشتر زیاد کراوە!", "error"); }
+                switchChatMode('friends', document.querySelectorAll('.chat-action-btn')[0]);
+            } else {
+                showToast("ئەم ناوە بوونی نییە لە سیستەمەکەدا!", "error");
+            }
+            btn.innerText = 'گەران'; btn.disabled = false;
+        }
+
+        function getPrivateChatId(u1, u2) {
+            return [u1, u2].sort().join('_').replace(/[\.\#\$\[\]]/g, '');
         }
 
         function openPrivateChat(user) {
             const content = document.getElementById('chat-content-area');
             const inputArea = document.getElementById('chat-input-container');
             document.querySelectorAll('.chat-action-btn').forEach(b => b.classList.remove('active'));
+            
             inputArea.style.display = 'flex';
             inputArea.dataset.mode = `private_${user}`; 
-            content.innerHTML = `<div style="padding:15px; background:rgba(0,0,0,0.3); display:flex; align-items:center; gap:15px; border-bottom:var(--border);"><button onclick="switchChatMode('friends', document.querySelector('.chat-action-btn'))" style="background:transparent; border:none; color:var(--primary); font-size:20px;">←</button><b style="color:#fff;">${user}</b></div><div class="chat-messages" id="chat-box"></div>`;
+            
+            content.innerHTML = `<div style="padding:15px; background:rgba(0,0,0,0.3); display:flex; align-items:center; gap:15px; border-bottom:var(--border);"><button onclick="switchChatMode('friends', document.querySelectorAll('.chat-action-btn')[0])" style="background:transparent; border:none; color:var(--primary); font-size:20px; cursor:pointer;">←</button><b style="color:#fff;">${user}</b></div><div class="chat-messages" id="chat-box"><div class="loader-box"><div class="spinner"></div></div></div>`;
+
+            if(activeChatRef) { activeChatRef.off(); activeChatRef = null; }
+
+            // Real-time private chat
+            const chatId = getPrivateChatId(userData.name, user);
+            document.getElementById('chat-box').innerHTML = '';
+            activeChatRef = db.ref('chats/private/' + chatId);
+            activeChatRef.limitToLast(50).on('child_added', (snap) => {
+                renderMessage(snap.val());
+            });
         }
 
+        // ================= FIREBASE LIVE MESSAGING =================
         function sendMessage() {
             const inp = document.getElementById('msg-input');
-            const box = document.getElementById('chat-box');
             const mode = document.getElementById('chat-input-container').dataset.mode;
             const text = inp.value.trim();
             if(!text) return;
             
             const time = new Date().toLocaleTimeString('ku-IQ', {hour: '2-digit', minute:'2-digit'});
-            box.innerHTML += `<div class="msg me"><span class="msg-badge" style="background:var(--primary); color:#fff;">LVL ${userData.level}</span> ${text} <span class="msg-time">${time}</span></div>`;
+            const msgData = {
+                sender: userData.name,
+                level: userData.level,
+                text: text,
+                time: time,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            if(mode === 'group') {
+                db.ref('chats/group').push(msgData);
+                updateXP(1); 
+            } else if (mode.startsWith('private_')) {
+                const targetUser = mode.split('_')[1];
+                const chatId = getPrivateChatId(userData.name, targetUser);
+                db.ref('chats/private/' + chatId).push(msgData);
+            }
+
             inp.value = "";
+        }
+
+        function renderMessage(msg) {
+            const box = document.getElementById('chat-box');
+            if(!box) return;
+
+            const isMe = msg.sender === userData.name;
+            const cls = isMe ? 'me' : 'other';
+            const badgeBg = isMe ? 'var(--primary)' : 'var(--warning)';
+            const senderNameHtml = isMe ? '' : `<b style="display:block; font-size:9px; color:var(--primary); margin-bottom:4px;">${msg.sender}</b>`;
+            
+            box.innerHTML += `<div class="msg ${cls}">${senderNameHtml}<span class="msg-badge" style="background:${badgeBg}; color:${isMe?'#fff':'#000'};">LVL ${msg.level}</span> ${msg.text} <span class="msg-time">${msg.time}</span></div>`;
             box.scrollTop = box.scrollHeight;
-            if(mode === 'group') updateXP(1); 
         }
 
         async function loadStats(code, btn) {
@@ -773,7 +857,6 @@
             container.innerHTML = html + `</tbody></table></div>`;
         }
 
-        // --- بەشی نوێی ڕیزبەندی لایڤ (یانەکان، گۆڵکاران و ئەسیست) ---
         async function loadLeaderboardsLive(code = 'PD', btn = null) {
             if(btn) { 
                 document.querySelectorAll('#v-leaderboard .league-tab').forEach(t => t.classList.remove('active')); 
@@ -786,7 +869,6 @@
             teamsBox.innerHTML = '<div class="loader-box"><div class="spinner"></div></div>';
             playersBox.innerHTML = '<div class="loader-box"><div class="spinner"></div></div>';
 
-            // ١. هێنانی باشترین ١٠ یانە
             const sData = await fetchAPI(`competitions/${code}/standings`);
             if(sData && sData.standings) {
                 let tHtml = `<div style="overflow-x:auto; border-radius:20px; background:var(--card); margin-bottom:25px; border:var(--border);"><table style="width:100%; border-collapse:collapse;"><thead style="background:rgba(255,255,255,0.05); color:var(--sub); font-size:10px;"><tr><th style="padding:12px; text-align:center;">ڕیز</th><th style="text-align:right;">یانە</th><th style="padding:12px; text-align:center;">خاڵ</th></tr></thead><tbody>`;
@@ -798,13 +880,12 @@
                 teamsBox.innerHTML = '<div style="text-align:center; color:var(--danger);">نەتوانرا داتا بهێنرێت.</div>';
             }
 
-            // ٢. هێنانی باشترین ١٠ گۆڵکار و ئەسیست
             const pData = await fetchAPI(`competitions/${code}/scorers`);
             if(pData && pData.scorers) {
                 let pHtml = ``;
                 pData.scorers.slice(0, 10).forEach((s, i) => {
                     let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `<b style="color:var(--sub);">${i+1}</b>`));
-                    let assists = s.assists !== undefined && s.assists !== null ? s.assists : '-'; // بەشێک لە API بێبەرامبەرەکان ئەسیست نادەن
+                    let assists = s.assists !== undefined && s.assists !== null ? s.assists : '-';
                     
                     pHtml += `
                     <div class="player-row" style="margin-bottom:10px; border:1px solid rgba(245, 158, 11, 0.15); background:linear-gradient(135deg, var(--card), rgba(245,158,11,0.03));">
@@ -878,14 +959,63 @@
             content.innerHTML = h;
         }
 
-        function closeModal() { document.getElementById('squad-modal').classList.remove('open'); }
+        // ================= NEW: LOAD TOP PREDICTORS FROM FIREBASE =================
+        function loadTopPredictors() {
+            const container = document.getElementById('top-predictors-list');
+            container.innerHTML = '<div class="loader-box"><div class="spinner"></div>هێنانی باشترینەکان...</div>';
+            
+            db.ref('users').orderByChild('points').limitToLast(10).once('value').then(snapshot => {
+                let users = [];
+                snapshot.forEach(child => {
+                    users.push(child.val());
+                });
+                users.reverse(); // ڕیزکردنی زۆرترین بۆ کەمترین
+                
+                if (users.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:var(--sub); padding:20px;">هیچ داتایەک بوونی نییە.</div>';
+                    return;
+                }
+                
+                let html = '';
+                users.forEach((u, index) => {
+                    let rankIcon = index === 0 ? '👑' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `#${index + 1}`));
+                    let cardStyle = index === 0 ? 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05)); border-color: var(--warning); transform: scale(1.02);' : '';
+                    let nameColor = index === 0 ? 'color: var(--warning); text-shadow: 0 0 10px rgba(245,158,11,0.5);' : 'color: #fff;';
+                    
+                    html += `
+                    <div class="player-row" style="margin-bottom:12px; border:1px solid rgba(255,255,255,0.05); ${cardStyle}">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <div style="width:35px; height:35px; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900;">${rankIcon}</div>
+                            <div class="p-info">
+                                <b style="font-size:14px; ${nameColor}">${u.name || 'میوان'}</b>
+                                <span style="display:flex; align-items:center; gap:5px;"><span style="background:var(--primary); color:#fff; padding:2px 6px; border-radius:4px; font-size:8px; font-weight:900;">LVL ${u.level || 1}</span> ${u.badge || 'Novice'}</span>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="p-val" style="background:var(--warning); color:#000; font-size:16px; box-shadow:0 4px 10px rgba(245,158,11,0.2);">${u.points || 0} <span style="font-size:10px;">PTS</span></div>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }).catch(err => {
+                container.innerHTML = '<div style="text-align:center; color:var(--danger); padding:20px;">کێشە لە هێنانی داتا هەیە.</div>';
+            });
+        }
 
-        function switchView(id, btn) {
+        // ================= NAVIGATION & VIEW SWITCHER =================
+        function switchView(viewId, btn) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            setTimeout(() => document.getElementById(id).classList.add('active'), 50);
+            document.getElementById(viewId).classList.add('active');
+            
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('scroller').scrollTop = 0;
+            if(btn) btn.classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ================= CLOSE MODAL =================
+        function closeModal() {
+            document.getElementById('squad-modal').classList.remove('open');
         }
 
     </script>
