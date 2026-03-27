@@ -1,0 +1,21 @@
+{
+  "short_name": "Havnka",
+  "name": "Havnka Sport",
+  "icons": [
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#121826",
+  "display": "standalone",
+  "theme_color": "#f39c12",
+  "description": "باشترین ماڵپەڕ بۆ هەواڵ و پێشبینییە وەرزشییەکان"
+}
