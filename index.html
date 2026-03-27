@@ -371,7 +371,7 @@
         <div class="nav-link" onclick="switchView('v-chat', this)"><i>💬</i><span>چات</span></div>
         <div class="nav-link" onclick="switchView('v-teams', this)"><i>🛡️</i><span>یانەکان</span></div>
         <div class="nav-link" onclick="switchView('v-leaderboard', this)"><i>🏅</i><span>گۆڵکاران</span></div>
-        <div class="nav-link" onclick="switchView('v-top-predictors', this); loadTopPredictors();"><i>👑</i><span>پێشبینیکار</span></div>
+        <div class="nav-link" onclick="switchView('v-top-predictors', this)"><i>👑</i><span>پێشبینیکار</span></div>
         <div class="nav-link" onclick="switchView('v-settings', this)"><i>⚙️</i><span>ڕێکخستن</span></div>
     </nav>
 
@@ -416,7 +416,6 @@
         const db = firebase.database();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // API Keys updated with the new 4 keys provided
         const API_KEYS = [
             "b5c23ac9f1754b87af19f23ead43cd09",
             "d18ce6011e82484a83a3f41c6e69bbaf",
@@ -428,7 +427,6 @@
         ];
         let currentKey = 0;
         
-        // NEW: ADDED lastRewardDate to tracker
         let userData = { 
             uid: "",
             name: "", 
@@ -480,6 +478,7 @@
                 if (user) {
                     db.ref('users/' + user.uid).once('value').then((snapshot) => {
                         if (snapshot.exists()) {
+                            // Update local userData with DB data FIRST
                             userData = snapshot.val();
                             proceedToApp(userData.name, true);
                         } else if(user.displayName) {
@@ -492,6 +491,9 @@
             });
             
             setInterval(() => loadLeaderboardsLive('PD'), 300000);
+            
+            // Start listening to top predictors in the background
+            listenToTopPredictors();
         };
 
         function selectFav(id, name, logo) {
@@ -518,7 +520,6 @@
                 db.ref('users/' + user.uid).once('value').then((snapshot) => {
                     if (snapshot.exists()) {
                         userData = snapshot.val();
-                        // پێشتر لێرە ناوەکەی دەسڕییەوە و دەیکردەوە ناوی بۆشاییەکە، ئێستا تەنها ناوی داتابەیس بەکاردەهێنێت
                         saveUserDataToDB();
                         proceedToApp(userData.name, false);
                     } else {
@@ -568,18 +569,18 @@
 
         function saveUserDataToDB() {
             if(userData.uid) {
-                return db.ref('users/' + userData.uid).set(userData); // ئێستا پڕۆمیسەکە دەگەڕێنێتەوە بۆ ئەوەی دڵنیابین داتاکە نوێ بووەتەوە
+                return db.ref('users/' + userData.uid).set(userData);
             }
             return Promise.resolve();
         }
 
         function proceedToApp(nameInput, isAuto) {
+            // Fix Name showing correctly
             document.getElementById('settings-user-name').innerText = userData.name;
             document.getElementById('home-fav-name').innerText = userData.favTeam.name;
             document.getElementById('home-fav-logo').src = userData.favTeam.logo;
             document.getElementById('settings-fav-team').innerHTML = `<img src="${userData.favTeam.logo}" style="width:20px;"> ${userData.favTeam.name}`;
             
-            // NEW: DAILY REWARDS CHECK
             const today = new Date().toISOString().split('T')[0];
             if (userData.lastRewardDate !== today) {
                 userData.lastRewardDate = today;
@@ -595,11 +596,6 @@
             loadStats('PD');
             loadTeams('PD');
             loadLeaderboardsLive('PD');
-            
-            // کێشەی خاڵەکان لێرە چارەسەر کرا، ماوەیەک دەوەستێت تا داتابەیسەکە خاڵەکانت سەیڤ دەکات ئینجا ڕیزبەندی پێشبینیکاران دەهێنێت
-            setTimeout(() => {
-                loadTopPredictors();
-            }, 1500); 
 
             switchChatMode('friends', document.querySelector('.chat-action-btn'));
         }
@@ -612,7 +608,6 @@
             }
         }
 
-        // NEW: CHANGE USERNAME FUNCTION
         async function changeUsername() {
             const newName = prompt("ناوی نوێ بنووسە (بە لایەنی کەم 3 پیت):", userData.name);
             if (!newName || newName.trim().length < 3) return;
@@ -631,7 +626,6 @@
             showToast("ناوەکەت بە سەرکەوتوویی گۆڕدرا بۆ: " + cleanName, "success");
         }
 
-        // ================= CORS PROXY FIXED =================
         async function fetchAPI(endpoint) {
             const cacheKey = `havnka_api_${endpoint}`;
             const cached = localStorage.getItem(cacheKey);
@@ -670,7 +664,6 @@
                 return;
             }
 
-            // NEW: AUTOMATED VERIFICATION FOR PREDICTIONS
             if(userData.predictions) {
                 let pUpdated = false;
                 data.matches.forEach(m => {
@@ -759,7 +752,6 @@
             }
             
             if(!userData.predictions) userData.predictions = {};
-            // NEW: rewarded: false added to track when points are given
             userData.predictions[`match_${matchId}`] = { h: parseIntH, a: parseIntA, rewarded: false };
             saveUserDataToDB();
             
@@ -770,7 +762,6 @@
             btn.innerText = "لە پێشبینیدایە ✓";
             btn.onclick = null;
 
-            // NEW: Removed instant XP. Only get XP after match is finished.
             showToast("پێشبینییەکەت نێردرا، ئەگەر ڕاست دەرچوو خاڵ وەردەگریت!", "success");
         }
 
@@ -826,7 +817,6 @@
                         <div class="loader-box"><div class="spinner"></div>وەگرتنی نامەکان...</div>
                     </div>`;
                 
-                // Real-time group chat
                 document.getElementById('chat-box').innerHTML = '';
                 activeChatRef = db.ref('chats/group');
                 activeChatRef.limitToLast(50).on('child_added', (snap) => {
@@ -835,7 +825,6 @@
             }
         }
 
-        // ================= FIREBASE USER VALIDATION =================
         async function addFriendAction() {
             const user = document.getElementById('find-user').value.trim();
             if(!user) { showToast("ناوی هاوڕێ بنووسە!", "error"); return; }
@@ -876,7 +865,6 @@
 
             if(activeChatRef) { activeChatRef.off(); activeChatRef = null; }
 
-            // Real-time private chat
             const chatId = getPrivateChatId(userData.name, user);
             document.getElementById('chat-box').innerHTML = '';
             activeChatRef = db.ref('chats/private/' + chatId);
@@ -885,7 +873,6 @@
             });
         }
 
-        // ================= FIREBASE LIVE MESSAGING =================
         function sendMessage() {
             const inp = document.getElementById('msg-input');
             const mode = document.getElementById('chat-input-container').dataset.mode;
@@ -1045,16 +1032,17 @@
             content.innerHTML = h;
         }
 
-        function loadTopPredictors() {
-            const container = document.getElementById('top-predictors-list');
-            container.innerHTML = '<div class="loader-box"><div class="spinner"></div>هێنانی باشترینەکان...</div>';
-            
-            db.ref('users').orderByChild('points').limitToLast(10).once('value').then(snapshot => {
+        // Live updating for top predictors
+        function listenToTopPredictors() {
+            db.ref('users').orderByChild('points').limitToLast(10).on('value', snapshot => {
+                const container = document.getElementById('top-predictors-list');
+                if(!container || document.getElementById('v-top-predictors').classList.contains('active') === false && container.innerHTML === "") return;
+                
                 let users = [];
                 snapshot.forEach(child => {
                     users.push(child.val());
                 });
-                users.reverse(); // ڕیزکردنی زۆرترین بۆ کەمترین
+                users.reverse();
                 
                 if (users.length === 0) {
                     container.innerHTML = '<div style="text-align:center; color:var(--sub); padding:20px;">هیچ داتایەک بوونی نییە.</div>';
@@ -1082,12 +1070,9 @@
                     </div>`;
                 });
                 container.innerHTML = html;
-            }).catch(err => {
-                container.innerHTML = '<div style="text-align:center; color:var(--danger); padding:20px;">کێشە لە هێنانی داتا هەیە.</div>';
             });
         }
 
-        // ================= NAVIGATION & VIEW SWITCHER =================
         function switchView(viewId, btn) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
@@ -1102,7 +1087,6 @@
             document.getElementById('squad-modal').classList.remove('open');
         }
 
-        // NEW: PULL TO REFRESH LOGIC
         let touchStartY = 0;
         const scroller = document.getElementById('scroller');
         const ptr = document.getElementById('ptr-indicator');
@@ -1130,13 +1114,12 @@
             touchStartY = 0;
         });
 
-        // ================= PWA INSTALLATION LOGIC =================
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             const installBtn = document.getElementById('install-app-btn');
-            if(installBtn) installBtn.style.display = 'flex'; // پیشاندانی دوگمەکە ئەگەر پشتگیری کرا
+            if(installBtn) installBtn.style.display = 'flex';
         });
 
         function installPWA() {
