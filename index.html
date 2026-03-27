@@ -191,7 +191,7 @@
 
                 <button class="btn-start" onclick="loginAsGuest()" id="btn-guest">چوونەژوورەوەی میوان 👤</button>
                 <button class="btn-start" onclick="loginWithGoogle()" id="btn-google" style="background: linear-gradient(135deg, #ea4335, #c5221f); margin-top:12px; box-shadow: 0 10px 20px rgba(234, 67, 53, 0.3);">
-                    چوونەژوورەوە بە Google 🌐
+‎                    چوونەژوورەوە بە Google 🌐
                 </button>
             </div>
 
@@ -227,7 +227,7 @@
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h4 style="color:#fff; font-size:14px; font-weight:900;">یارییە ڕاستەوخۆکان (پێشبینی)</h4>
+                <h4 style="color:#fff; font-size:14px; font-weight:900;">یارییە ڕاستەوخۆکانی ٥ خولە گەورەکە </h4>
                 <span style="background:rgba(244, 63, 94, 0.1); color:var(--danger); padding:4px 10px; border-radius:6px; font-size:9px; font-weight:800; border:1px solid rgba(244, 63, 94, 0.2);">LIVE MATCHES</span>
             </div>
 
@@ -237,7 +237,7 @@
             
             <div style="background:var(--card); border:var(--border); border-radius:20px; padding:20px; margin-top:20px; text-align:center;">
                 <h4 style="color:var(--primary); font-size:13px; font-weight:900; margin-bottom:10px;">سیستەمی پۆینت و ئاست 🌟</h4>
-                <p style="color:var(--sub); font-size:10px; line-height:1.6;">بۆ هەر پێشبینییەکی ڕاست خاڵ بەدەست بهێنە. هەروەها بە ناردنی نامە لە چات خاڵت زیاد دەکات. بەرزکردنەوەی ئاست باجی نوێت پێدەبەخشێت!</p>
+                <p style="color:var(--sub); font-size:10px; line-height:1.6;">بۆ هەر پێشبینییەکی ڕاست ٢٠ خاڵ بەدەست بهێنە. هەروەها بە ناردنی نامە لە چات خاڵت زیاد دەکات. بەرزکردنەوەی ئاست باجی نوێت پێدەبەخشێت!</p>
             </div>
         </div>
 
@@ -321,10 +321,13 @@
         <div id="v-settings" class="view">
             <div class="settings-user-card">
                 <div class="points-badge" id="settings-points">0 PTS</div>
-                <div style="width:90px; height:90px; background:linear-gradient(135deg, var(--primary), #059669); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:#fff; border:6px solid rgba(255,255,255,0.05); box-shadow:0 10px 20px rgba(0,0,0,0.3); position:relative;">
-                    👤
-                    <div style="position:absolute; bottom:0; right:0; width:25px; height:25px; background:var(--warning); border-radius:50%; border:3px solid var(--secondary); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; color:#000;" id="user-level-icon">1</div>
+                
+                <input type="file" id="profile-upload" accept="image/*" style="display:none;" onchange="handleProfileUpload(event)">
+                <div onclick="document.getElementById('profile-upload').click()" style="width:90px; height:90px; background:linear-gradient(135deg, var(--primary), #059669); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:#fff; border:6px solid rgba(255,255,255,0.05); box-shadow:0 10px 20px rgba(0,0,0,0.3); position:relative; cursor:pointer; overflow:hidden;">
+                    <div id="settings-avatar-icon" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;">👤</div>
+                    <div style="position:absolute; bottom:0; right:0; width:25px; height:25px; background:var(--warning); border-radius:50%; border:3px solid var(--secondary); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; color:#000; z-index:10;" id="user-level-icon">1</div>
                 </div>
+
                 <h2 id="settings-user-name" style="font-size:24px; font-weight:900; margin-bottom:5px; text-shadow:0 2px 5px rgba(0,0,0,0.5);">...</h2>
                 <p style="color:var(--sub); font-size:11px; font-weight:800; margin-bottom:10px;" id="settings-user-badge">Novice</p>
                 <div class="dev-tag">DEVELOPER: JUDY SHAKR</div>
@@ -436,7 +439,8 @@
             favTeam: {}, 
             friends: [],
             predictions: {},
-            lastRewardDate: ""
+            lastRewardDate: "",
+            profilePic: ""
         };
 
         const TEAMS = [
@@ -478,7 +482,6 @@
                 if (user) {
                     db.ref('users/' + user.uid).once('value').then((snapshot) => {
                         if (snapshot.exists()) {
-                            // Update local userData with DB data FIRST
                             userData = snapshot.val();
                             proceedToApp(userData.name, true);
                         } else if(user.displayName) {
@@ -492,7 +495,6 @@
             
             setInterval(() => loadLeaderboardsLive('PD'), 300000);
             
-            // Start listening to top predictors in the background
             listenToTopPredictors();
         };
 
@@ -568,19 +570,54 @@
         }
 
         function saveUserDataToDB() {
-            if(userData.uid) {
-                return db.ref('users/' + userData.uid).set(userData);
+            const currentUid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : userData.uid;
+            if(currentUid) {
+                userData.uid = currentUid;
+                return db.ref('users/' + currentUid).set(userData);
             }
             return Promise.resolve();
         }
 
+        function handleProfileUpload(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 150;
+                    canvas.height = 150;
+                    ctx.drawImage(img, 0, 0, 150, 150);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                    userData.profilePic = base64;
+                    saveUserDataToDB();
+                    updateProfileImages();
+                    showToast("وێنەی پڕۆفایل نوێکرایەوە بێ کێشە", "success");
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateProfileImages() {
+            const pic = userData.profilePic || '';
+            if(pic) {
+                document.getElementById('settings-avatar-icon').innerHTML = `<img src="${pic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            } else {
+                document.getElementById('settings-avatar-icon').innerHTML = `👤`;
+            }
+        }
+
         function proceedToApp(nameInput, isAuto) {
-            // Fix Name showing correctly
             document.getElementById('settings-user-name').innerText = userData.name;
             document.getElementById('home-fav-name').innerText = userData.favTeam.name;
             document.getElementById('home-fav-logo').src = userData.favTeam.logo;
             document.getElementById('settings-fav-team').innerHTML = `<img src="${userData.favTeam.logo}" style="width:20px;"> ${userData.favTeam.name}`;
             
+            updateProfileImages();
+
             const today = new Date().toISOString().split('T')[0];
             if (userData.lastRewardDate !== today) {
                 userData.lastRewardDate = today;
@@ -621,6 +658,10 @@
             }
             
             userData.name = cleanName;
+            const userAuth = firebase.auth().currentUser;
+            if(userAuth) {
+                userAuth.updateProfile({ displayName: cleanName });
+            }
             saveUserDataToDB();
             document.getElementById('settings-user-name').innerText = userData.name;
             showToast("ناوەکەت بە سەرکەوتوویی گۆڕدرا بۆ: " + cleanName, "success");
@@ -657,12 +698,23 @@
 
         async function loadLiveMatches() {
             const container = document.getElementById('live-match-container');
-            const data = await fetchAPI('matches');
+            
+            let d = new Date();
+            d.setDate(d.getDate() - 1);
+            let dFrom = d.toISOString().split('T')[0];
+            
+            let d2 = new Date();
+            d2.setDate(d2.getDate() + 1);
+            let dTo = d2.toISOString().split('T')[0];
+
+            const data = await fetchAPI(`matches?dateFrom=${dFrom}&dateTo=${dTo}`);
             
             if(!data || !data.matches) {
                 container.innerHTML = '<div class="predict-card" style="text-align:center; color:var(--danger);">نەتوانرا یارییەکان بهێنرێت، هێڵەکەت بپشکنە!</div>';
                 return;
             }
+
+            const allowedLeagues = [2021, 2014, 2019, 2002, 2015]; // 5 Major Leagues
 
             if(userData.predictions) {
                 let pUpdated = false;
@@ -675,7 +727,7 @@
                             updateXP(20, "پێشبینی ڕاست");
                             showToast(`پێشبینیت بۆ یاری (${m.homeTeam.shortName}) ڕاست دەرچوو! +20 خاڵ`, "success");
                         } else {
-                            showToast(`پێشبینیت بۆ یاری (${m.homeTeam.shortName}) هەڵە بوو.`, "error");
+                            showToast(`پێشبینیت بۆ یاری (${m.homeTeam.shortName}) هەڵە بوو. ئەنجام: ${actualH}-${actualA}`, "error");
                         }
                         userData.predictions[pKey].rewarded = true;
                         pUpdated = true;
@@ -684,13 +736,16 @@
                 if(pUpdated) saveUserDataToDB();
             }
 
-            const liveMatches = data.matches.filter(m => m.status === 'IN_PLAY' || m.status === 'TIMED' || m.status === 'PAUSED').slice(0, 4);
+            let liveMatches = data.matches.filter(m => 
+                m.competition && allowedLeagues.includes(m.competition.id) && 
+                (m.status === 'IN_PLAY' || m.status === 'TIMED' || m.status === 'PAUSED' || m.status === 'SCHEDULED')
+            ).slice(0, 10);
 
             if(liveMatches.length === 0) {
                 container.innerHTML = `
                     <div class="predict-card" style="text-align:center; border-right-color:var(--sub); display:flex; flex-direction:column; align-items:center; gap:10px;">
                         <i style="font-size:30px; color:var(--sub);">⚽</i>
-                        <b style="color:#fff;">هیچ یارییەکی لایڤ بوونی نییە ئێستا</b>
+                        <b style="color:#fff;">لە ٥ خولە گەورەکە هیچ یارییەکی لایڤ بوونی نییە ئێستا</b>
                     </div>`;
                 return;
             }
@@ -700,12 +755,16 @@
                 const btnState = isPredicted ? 'لە پێشبینیدایە ✓' : 'ناردنی پێشبینی 🚀';
                 const btnColor = isPredicted ? 'var(--primary)' : 'var(--warning)';
                 const btnClick = isPredicted ? '' : `onclick="submitPrediction(${m.id}, this)"`;
+                const isLive = (m.status === 'IN_PLAY' || m.status === 'PAUSED');
 
                 return `
                 <div class="predict-card" id="match-card-${m.id}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                        <span style="font-size:10px; color:var(--sub); background:rgba(255,255,255,0.05); padding:3px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1);"><img src="${m.competition.emblem}" style="width:12px; vertical-align:middle; margin-left:4px;" onerror="this.style.display='none'">${m.competition.name}</span>
+                    </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b style="font-size:12px; color:var(--warning); display:flex; align-items:center; gap:5px;"><span class="spinner" style="width:10px;height:10px;border-width:2px;margin:0;border-top-color:var(--warning);"></span> ${m.status === 'IN_PLAY' ? 'لە یاریكردندایە' : 'یاری داهاتوو'}</b>
-                        <span style="font-size:9px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; color:#fff;">${new Date(m.utcDate).toLocaleTimeString('ku-IQ', {hour: '2-digit', minute:'2-digit'})}</span>
+                        <b style="font-size:12px; color:var(--warning); display:flex; align-items:center; gap:5px;">${isLive ? '<span class="spinner" style="width:10px;height:10px;border-width:2px;margin:0;border-top-color:var(--warning);"></span> لە یاریكردندایە' : 'یاری داهاتوو'}</b>
+                        <span style="font-size:9px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:6px; color:#fff;">${new Date(m.utcDate).toLocaleDateString('ku-IQ')} - ${new Date(m.utcDate).toLocaleTimeString('ku-IQ', {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
                     <div class="match-row">
                         <div class="team-mini"><img src="${m.homeTeam.crest}"><b>${m.homeTeam.shortName}</b></div>
@@ -1032,11 +1091,10 @@
             content.innerHTML = h;
         }
 
-        // Live updating for top predictors
         function listenToTopPredictors() {
             db.ref('users').orderByChild('points').limitToLast(10).on('value', snapshot => {
                 const container = document.getElementById('top-predictors-list');
-                if(!container || document.getElementById('v-top-predictors').classList.contains('active') === false && container.innerHTML === "") return;
+                if(!container) return; // FIXED BUG: Always listen to updates securely!
                 
                 let users = [];
                 snapshot.forEach(child => {
@@ -1054,11 +1112,15 @@
                     let rankIcon = index === 0 ? '👑' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : `#${index + 1}`));
                     let cardStyle = index === 0 ? 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05)); border-color: var(--warning); transform: scale(1.02);' : '';
                     let nameColor = index === 0 ? 'color: var(--warning); text-shadow: 0 0 10px rgba(245,158,11,0.5);' : 'color: #fff;';
-                    
+                    let avatarHtml = u.profilePic ? `<img src="${u.profilePic}" style="width:100%;height:100%;object-fit:cover;">` : rankIcon;
+
                     html += `
                     <div class="player-row" style="margin-bottom:12px; border:1px solid rgba(255,255,255,0.05); ${cardStyle}">
                         <div style="display:flex; align-items:center; gap:15px;">
-                            <div style="width:35px; height:35px; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900;">${rankIcon}</div>
+                            <div style="width:35px; height:35px; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900; overflow:hidden; border:2px solid var(--primary); position:relative;">
+                                ${avatarHtml}
+                                ${u.profilePic ? `<div style="position:absolute; bottom:0; right:0; font-size:9px; background:rgba(0,0,0,0.5); border-radius:50%; width:100%; text-align:center;">${rankIcon}</div>` : ''}
+                            </div>
                             <div class="p-info">
                                 <b style="font-size:14px; ${nameColor}">${u.name || 'میوان'}</b>
                                 <span style="display:flex; align-items:center; gap:5px;"><span style="background:var(--primary); color:#fff; padding:2px 6px; border-radius:4px; font-size:8px; font-weight:900;">LVL ${u.level || 1}</span> ${u.badge || 'Novice'}</span>
