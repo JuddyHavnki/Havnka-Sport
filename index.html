@@ -340,6 +340,11 @@
                     <span id="settings-fav-team" style="color:#fff; font-weight:800; display:flex; align-items:center; gap:8px;">-</span>
                 </div>
                 
+                <div id="install-app-btn" style="display:none; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer;" onclick="installPWA()" onmouseover="this.style.background='rgba(16, 185, 129, 0.05)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(16, 185, 129, 0.1); color:var(--primary); padding:8px; border-radius:10px;">📲</i> <b style="font-size:12px; color:var(--primary);">دابەزاندنی ئەپەکە لەسەر مۆبایل</b></div>
+                    <span style="color:var(--primary); font-weight:900;">Install</span>
+                </div>
+                
                 <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer;" onclick="changeUsername()" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
                     <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">✏️</i> <b style="font-size:12px;">گۆڕینی ناوی بەکارهێنەر</b></div>
                     <span style="color:var(--primary); font-weight:900;">گۆڕین</span>
@@ -513,7 +518,7 @@
                 db.ref('users/' + user.uid).once('value').then((snapshot) => {
                     if (snapshot.exists()) {
                         userData = snapshot.val();
-                        userData.name = nameInput; 
+                        // پێشتر لێرە ناوەکەی دەسڕییەوە و دەیکردەوە ناوی بۆشاییەکە، ئێستا تەنها ناوی داتابەیس بەکاردەهێنێت
                         saveUserDataToDB();
                         proceedToApp(userData.name, false);
                     } else {
@@ -563,8 +568,9 @@
 
         function saveUserDataToDB() {
             if(userData.uid) {
-                db.ref('users/' + userData.uid).set(userData);
+                return db.ref('users/' + userData.uid).set(userData); // ئێستا پڕۆمیسەکە دەگەڕێنێتەوە بۆ ئەوەی دڵنیابین داتاکە نوێ بووەتەوە
             }
+            return Promise.resolve();
         }
 
         function proceedToApp(nameInput, isAuto) {
@@ -578,7 +584,6 @@
             if (userData.lastRewardDate !== today) {
                 userData.lastRewardDate = today;
                 updateXP(5, "پاداشتی ڕۆژانە");
-                saveUserDataToDB();
                 showToast("پاداشتی ڕۆژانە وەرگیرا: +5 خاڵ", "success");
             }
 
@@ -590,7 +595,12 @@
             loadStats('PD');
             loadTeams('PD');
             loadLeaderboardsLive('PD');
-            loadTopPredictors();
+            
+            // کێشەی خاڵەکان لێرە چارەسەر کرا، ماوەیەک دەوەستێت تا داتابەیسەکە خاڵەکانت سەیڤ دەکات ئینجا ڕیزبەندی پێشبینیکاران دەهێنێت
+            setTimeout(() => {
+                loadTopPredictors();
+            }, 1500); 
+
             switchChatMode('friends', document.querySelector('.chat-action-btn'));
         }
 
@@ -1119,6 +1129,30 @@
             }
             touchStartY = 0;
         });
+
+        // ================= PWA INSTALLATION LOGIC =================
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-app-btn');
+            if(installBtn) installBtn.style.display = 'flex'; // پیشاندانی دوگمەکە ئەگەر پشتگیری کرا
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        document.getElementById('install-app-btn').style.display = 'none';
+                        showToast("ئەپەکە بە سەرکەوتوویی دابەزێنرا!", "success");
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                showToast("پێشتر دابەزێنراوە یان وێبگەڕەکەت پشتگیری ناکات.", "error");
+            }
+        }
 
     </script>
 </body>
