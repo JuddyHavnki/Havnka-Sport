@@ -18,7 +18,7 @@
     <style>
         /* PROJECT: HAVNKA SPORT V12 PRO
            DEVELOPER: JUDY SHAKR
-           FEATURES: FIREBASE REAL-TIME, BADGES, LIVE MATCHES, PRO SYSTEM, TOP 1 PREDICTOR
+           FEATURES: FIREBASE REAL-TIME, BADGES, LIVE MATCHES, PRO SYSTEM, TOP 1 PREDICTOR, FANTASY LEAGUE
         */
 
         @font-face { font-family: 'NRT'; src: local('NRT Reg'), local('NRT'); }
@@ -41,7 +41,7 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'NRT', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; position: fixed; width: 100vw; font-size: 11px; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; position: fixed; width: 100vw; font-size: 11px; transition: background 0.3s; }
         ::-webkit-scrollbar { display: none; }
 
         /* ================= AUTH & LOGIN ================= */
@@ -76,7 +76,7 @@
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
 
         /* ================= HOME VIEW ================= */
-        .fav-banner { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 25px; padding: 22px; margin-bottom: 25px; border: var(--border); display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .fav-banner { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 25px; padding: 22px; margin-bottom: 25px; border: var(--border); display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3); transition: 0.3s; }
         .fav-logo-bg { width: 75px; height: 75px; background: rgba(255,255,255,0.05); border-radius: 22px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; }
         .fav-logo-bg img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
         .fav-info h3 { font-size: 19px; font-weight: 900; color: var(--primary); margin: 3px 0; }
@@ -121,7 +121,7 @@
 
         /* ================= TABLES & STATS ================= */
         .stats-title { font-size: 14px; font-weight: 900; color: var(--primary); margin: 25px 0 15px; display: flex; align-items: center; gap: 12px; background: var(--primary-glow); padding: 10px 15px; border-radius: 12px; }
-        .player-row { background: var(--card); border: var(--border); padding: 14px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; transition: 0.3s; }
+        .player-row { background: var(--card); border: var(--border); padding: 14px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; transition: 0.3s; cursor: pointer; }
         .player-row:hover { background: var(--secondary); border-color: var(--primary); }
         .p-info b { display: block; font-size: 13px; margin-bottom: 2px; color: #fff; }
         .p-info span { color: var(--sub); font-size: 10px; }
@@ -157,6 +157,17 @@
         .points-badge { position: absolute; top: 20px; right: 20px; background: var(--warning); color: #000; padding: 5px 15px; border-radius: 100px; font-weight: 900; font-size: 12px; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
         .dev-tag { background: #fff; color: #000; padding: 5px 15px; border-radius: 100px; font-weight: 900; font-size: 10px; display: inline-block; margin-top: 12px; box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
 
+        /* FANTASY CARD */
+        .fantasy-card { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(0,0,0,0.2)); border: 1px solid var(--primary); border-radius: 20px; padding: 15px; text-align: center; display:flex; flex-direction:column; align-items:center; gap:8px; }
+        .fantasy-buy-btn { background: var(--warning); color: #000; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 900; cursor: pointer; width: 100%; transition: 0.3s; }
+        .fantasy-buy-btn:active { transform: scale(0.95); }
+
+        /* TOGGLE SWITCH */
+        .toggle-switch { position: relative; width: 45px; height: 24px; background: var(--secondary); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: 0.3s; }
+        .toggle-switch.active { background: var(--primary); border-color: var(--primary); }
+        .toggle-switch.active::after { transform: translateX(21px); }
+
         /* TOAST NOTIFICATIONS */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 100005; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast { background: rgba(15, 23, 42, 0.95); border: 1px solid var(--primary); color: #fff; padding: 12px 25px; border-radius: 100px; font-size: 11px; font-weight: 800; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(10px); animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOut 0.4s 2.6s forwards; }
@@ -189,9 +200,9 @@
                 
                 <div class="fav-team-selector" id="fav-selector"></div>
 
-                <button class="btn-start" onclick="loginAsGuest()" id="btn-guest">چوونەژوورەوەی میوان 👤</button>
-                <button class="btn-start" onclick="loginWithGoogle()" id="btn-google" style="background: linear-gradient(135deg, #ea4335, #c5221f); margin-top:12px; box-shadow: 0 10px 20px rgba(234, 67, 53, 0.3);">
-‎                    چوونەژوورەوە بە Google 🌐
+                <button class="btn-start" onclick="loginAsGuest(); triggerHaptic();" id="btn-guest">چوونەژوورەوەی میوان 👤</button>
+                <button class="btn-start" onclick="loginWithGoogle(); triggerHaptic();" id="btn-google" style="background: linear-gradient(135deg, #ea4335, #c5221f); margin-top:12px; box-shadow: 0 10px 20px rgba(234, 67, 53, 0.3);">
+                    چوونەژوورەوە بە Google 🌐
                 </button>
             </div>
 
@@ -217,17 +228,17 @@
     <main id="scroller">
         
         <div id="v-home" class="view active">
-            <div class="fav-banner">
+            <div class="fav-banner" id="home-fav-banner">
                 <div class="fav-logo-bg"><img id="home-fav-logo" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Fav Logo"></div>
                 <div class="fav-info">
-                    <p style="font-size:10px; font-weight:800; color:var(--sub); margin-bottom:4px;">بەخێربێیتەوە بۆ جیهانی پڕۆ</p>
+                    <p style="font-size:10px; font-weight:800; color:var(--sub); margin-bottom:4px;" id="home-welcome-txt">بەخێربێیتەوە بۆ جیهانی پڕۆ</p>
                     <h3 id="home-fav-name">...</h3>
                     <div style="margin-top:8px; font-size:9px; background:var(--primary-glow); padding:5px 12px; border-radius:8px; display:inline-block; color:var(--primary); font-weight:900; letter-spacing:1px; border:1px solid rgba(16, 185, 129, 0.2);">HAVNKA V12 PRO</div>
                 </div>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h4 style="color:#fff; font-size:14px; font-weight:900;">یارییە ڕاستەوخۆکانی ٥ خولە گەورەکە </h4>
+                <h4 style="color:#fff; font-size:14px; font-weight:900;" id="home-live-txt">یارییە ڕاستەوخۆکانی ٥ خولە گەورەکە </h4>
                 <span style="background:rgba(244, 63, 94, 0.1); color:var(--danger); padding:4px 10px; border-radius:6px; font-size:9px; font-weight:800; border:1px solid rgba(244, 63, 94, 0.2);">LIVE MATCHES</span>
             </div>
 
@@ -236,19 +247,19 @@
             </div>
             
             <div style="background:var(--card); border:var(--border); border-radius:20px; padding:20px; margin-top:20px; text-align:center;">
-                <h4 style="color:var(--primary); font-size:13px; font-weight:900; margin-bottom:10px;">سیستەمی پۆینت و ئاست 🌟</h4>
-                <p style="color:var(--sub); font-size:10px; line-height:1.6;">بۆ هەر پێشبینییەکی ڕاست ٢٠ خاڵ بەدەست بهێنە. هەروەها بە ناردنی نامە لە چات خاڵت زیاد دەکات. بەرزکردنەوەی ئاست باجی نوێت پێدەبەخشێت!</p>
+                <h4 style="color:var(--primary); font-size:13px; font-weight:900; margin-bottom:10px;" id="home-sys-txt">سیستەمی پۆینت و ئاست 🌟</h4>
+                <p style="color:var(--sub); font-size:10px; line-height:1.6;" id="home-sys-desc">بۆ هەر پێشبینییەکی ڕاست ٢٠ خاڵ بەدەست بهێنە. هەروەها بە ناردنی نامە لە چات خاڵت زیاد دەکات. بەرزکردنەوەی ئاست باجی نوێت پێدەبەخشێت!</p>
             </div>
         </div>
 
         <div id="v-standings" class="view">
             <div class="league-scroller">
-                <div class="league-tab active" onclick="loadStats('PD', this)">La Liga</div>
-                <div class="league-tab" onclick="loadStats('PL', this)">Premier League</div>
-                <div class="league-tab" onclick="loadStats('SA', this)">Serie A</div>
-                <div class="league-tab" onclick="loadStats('BL1', this)">Bundesliga</div>
-                <div class="league-tab" onclick="loadStats('FL1', this)">Ligue 1</div>
-                <div class="league-tab" onclick="loadStats('CL', this)">Champions League</div>
+                <div class="league-tab active" onclick="loadStats('PD', this); triggerHaptic();">La Liga</div>
+                <div class="league-tab" onclick="loadStats('PL', this); triggerHaptic();">Premier League</div>
+                <div class="league-tab" onclick="loadStats('SA', this); triggerHaptic();">Serie A</div>
+                <div class="league-tab" onclick="loadStats('BL1', this); triggerHaptic();">Bundesliga</div>
+                <div class="league-tab" onclick="loadStats('FL1', this); triggerHaptic();">Ligue 1</div>
+                <div class="league-tab" onclick="loadStats('CL', this); triggerHaptic();">Champions League</div>
             </div>
             <div id="standings-data">
                 <div class="loader-box"><div class="spinner"></div>ڕیزبەندی و گۆڵکاران...</div>
@@ -258,16 +269,16 @@
         <div id="v-chat" class="view">
             <div class="chat-layout">
                 <div class="chat-header-actions">
-                    <div class="chat-action-btn active" onclick="switchChatMode('friends', this)">هاوڕێکان</div>
-                    <div class="chat-action-btn" onclick="switchChatMode('group', this)">گرووپی گشتی</div>
-                    <div class="chat-action-btn" onclick="switchChatMode('add', this)">زیادکردن</div>
+                    <div class="chat-action-btn active" onclick="switchChatMode('friends', this); triggerHaptic();" id="chat-tab-friends">هاوڕێکان</div>
+                    <div class="chat-action-btn" onclick="switchChatMode('group', this); triggerHaptic();" id="chat-tab-group">گرووپی گشتی</div>
+                    <div class="chat-action-btn" onclick="switchChatMode('add', this); triggerHaptic();" id="chat-tab-add">زیادکردن</div>
                 </div>
                 
                 <div id="chat-content-area" style="flex:1; overflow-y:auto; display:flex; flex-direction:column;"></div>
 
                 <div id="chat-input-container" style="display:none; padding:15px; background:rgba(0,0,0,0.5); border-top:var(--border); gap:10px; backdrop-filter:blur(10px);">
                     <input type="text" id="msg-input" class="chat-input" style="flex:1; background:var(--secondary); border:1px solid rgba(255,255,255,0.1); padding:14px 20px; border-radius:100px; color:#fff; font-size:12px;" placeholder="نامەکەت لێرە بنووسە..." onkeypress="if(event.key === 'Enter') sendMessage()">
-                    <button onclick="sendMessage()" style="width:48px; height:48px; background:linear-gradient(135deg, var(--primary), #059669); border:none; border-radius:50%; color:#fff; cursor:pointer; font-size:18px; box-shadow:0 5px 15px rgba(16,185,129,0.3); transition:0.3s;" id="btn-send-msg">
+                    <button onclick="sendMessage(); triggerHaptic();" style="width:48px; height:48px; background:linear-gradient(135deg, var(--primary), #059669); border:none; border-radius:50%; color:#fff; cursor:pointer; font-size:18px; box-shadow:0 5px 15px rgba(16,185,129,0.3); transition:0.3s;" id="btn-send-msg">
                         <i style="transform:rotate(-45deg); display:inline-block;">➤</i>
                     </button>
                 </div>
@@ -276,42 +287,33 @@
 
         <div id="v-teams" class="view">
             <div class="league-scroller">
-                <div class="league-tab active" onclick="loadTeams('PD', this)">La Liga</div>
-                <div class="league-tab" onclick="loadTeams('PL', this)">Premier League</div>
-                <div class="league-tab" onclick="loadTeams('SA', this)">Serie A</div>
-                <div class="league-tab" onclick="loadTeams('BL1', this)">Bundesliga</div>
-                <div class="league-tab" onclick="loadTeams('FL1', this)">Ligue 1</div>
+                <div class="league-tab active" onclick="loadTeams('PD', this); triggerHaptic();">La Liga</div>
+                <div class="league-tab" onclick="loadTeams('PL', this); triggerHaptic();">Premier League</div>
+                <div class="league-tab" onclick="loadTeams('SA', this); triggerHaptic();">Serie A</div>
+                <div class="league-tab" onclick="loadTeams('BL1', this); triggerHaptic();">Bundesliga</div>
+                <div class="league-tab" onclick="loadTeams('FL1', this); triggerHaptic();">Ligue 1</div>
             </div>
             <div id="teams-list" class="team-grid">
                 <div class="loader-box" style="grid-column: span 2;"><div class="spinner"></div>هێنانی لیستی یانەکان...</div>
             </div>
         </div>
 
-        <div id="v-leaderboard" class="view">
-            <div class="league-scroller">
-                <div class="league-tab active" onclick="loadLeaderboardsLive('PD', this)">La Liga</div>
-                <div class="league-tab" onclick="loadLeaderboardsLive('PL', this)">Premier League</div>
-                <div class="league-tab" onclick="loadLeaderboardsLive('SA', this)">Serie A</div>
-                <div class="league-tab" onclick="loadLeaderboardsLive('BL1', this)">Bundesliga</div>
-                <div class="league-tab" onclick="loadLeaderboardsLive('FL1', this)">Ligue 1</div>
-            </div>
-
-            <p style="color:var(--sub); font-size:10px; text-align:center; margin-bottom:15px;">داتاکان بە شێوەی ئۆتۆماتیکی لە API وەردەگیرێن بە زیندووی و نوێ دەبنەوە.</p>
+        <div id="v-fantasy" class="view">
+            <div class="stats-title" style="justify-content:center; font-size:16px;"><i>🎮</i> <span id="fantasy-title-txt">فانتازی لیگی تایبەت</span></div>
+            <p style="color:var(--sub); font-size:10px; text-align:center; margin-bottom:20px;" id="fantasy-desc-txt">خاڵەکانت (PTS) بەکاربهێنە بۆ دروستکردنی تیمی خەونەکانت</p>
             
-            <div class="stats-title" style="margin-top:0;"><i>🏆</i> باشترین ١٠ یانە لە خولەکە</div>
-            <div id="top-teams-data">
-                <div class="loader-box"><div class="spinner"></div>وەگرتنی ڕیزبەندی یانەکان...</div>
+            <div style="background:var(--card); border:var(--border); border-radius:20px; padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                <b style="color:#fff;" id="fantasy-budget-txt">بوودجەی تۆ:</b>
+                <span style="background:var(--warning); color:#000; padding:5px 15px; border-radius:10px; font-weight:900;" id="fantasy-user-points">0 PTS</span>
             </div>
 
-            <div class="stats-title"><i>🔥</i> باشترین ١٠ گۆڵکار و ئەسیست</div>
-            <div id="top-players-data">
-                <div class="loader-box"><div class="spinner"></div>وەگرتنی ڕیزبەندی یاریزانان...</div>
-            </div>
+            <div id="fantasy-market-list" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
+                </div>
         </div>
 
         <div id="v-top-predictors" class="view">
-            <div class="stats-title" style="justify-content:center; font-size:16px;"><i>👑</i> باشترین پێشبینیکاران (TOP 1)</div>
-            <p style="color:var(--sub); font-size:10px; text-align:center; margin-bottom:20px;">ئەو بەکارهێنەرانەی زۆرترین خاڵیان هەیە لە سیستەمەکەدا</p>
+            <div class="stats-title" style="justify-content:center; font-size:16px;"><i>👑</i> <span id="top1-title-txt">باشترین پێشبینیکاران (TOP 1)</span></div>
+            <p style="color:var(--sub); font-size:10px; text-align:center; margin-bottom:20px;" id="top1-desc-txt">ئەو بەکارهێنەرانەی زۆرترین خاڵیان هەیە لە سیستەمەکەدا</p>
             
             <div id="top-predictors-list">
                 <div class="loader-box"><div class="spinner"></div>هێنانی باشترینەکان...</div>
@@ -319,11 +321,11 @@
         </div>
 
         <div id="v-settings" class="view">
-            <div class="settings-user-card">
+            <div class="settings-user-card" id="settings-user-card-bg">
                 <div class="points-badge" id="settings-points">0 PTS</div>
                 
                 <input type="file" id="profile-upload" accept="image/*" style="display:none;" onchange="handleProfileUpload(event)">
-                <div onclick="document.getElementById('profile-upload').click()" style="width:90px; height:90px; background:linear-gradient(135deg, var(--primary), #059669); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:#fff; border:6px solid rgba(255,255,255,0.05); box-shadow:0 10px 20px rgba(0,0,0,0.3); position:relative; cursor:pointer; overflow:hidden;">
+                <div onclick="document.getElementById('profile-upload').click(); triggerHaptic();" style="width:90px; height:90px; background:linear-gradient(135deg, var(--primary), #059669); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:#fff; border:6px solid rgba(255,255,255,0.05); box-shadow:0 10px 20px rgba(0,0,0,0.3); position:relative; cursor:pointer; overflow:hidden;">
                     <div id="settings-avatar-icon" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;">👤</div>
                     <div style="position:absolute; bottom:0; right:0; width:25px; height:25px; background:var(--warning); border-radius:50%; border:3px solid var(--secondary); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; color:#000; z-index:10;" id="user-level-icon">1</div>
                 </div>
@@ -335,30 +337,47 @@
 
             <div style="background:var(--card); border:var(--border); border-radius:28px; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
                 <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
-                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">💎</i> <b style="font-size:12px;">ئاستی هەژمار</b></div>
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">💎</i> <b style="font-size:12px;" id="set-lvl-txt">ئاستی هەژمار</b></div>
                     <span id="user-level-tag" style="color:var(--primary); font-weight:900; background:var(--primary-glow); padding:5px 12px; border-radius:8px;">LEVEL 1</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
-                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🛡️</i> <b style="font-size:12px;">یانەی دڵخواز</b></div>
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🛡️</i> <b style="font-size:12px;" id="set-fav-txt">یانەی دڵخواز</b></div>
                     <span id="settings-fav-team" style="color:#fff; font-weight:800; display:flex; align-items:center; gap:8px;">-</span>
                 </div>
                 
-                <div id="install-app-btn" style="display:none; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer;" onclick="installPWA()" onmouseover="this.style.background='rgba(16, 185, 129, 0.05)'" onmouseout="this.style.background='transparent'">
-                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(16, 185, 129, 0.1); color:var(--primary); padding:8px; border-radius:10px;">📲</i> <b style="font-size:12px; color:var(--primary);">دابەزاندنی ئەپەکە لەسەر مۆبایل</b></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">📳</i> <b style="font-size:12px;" id="set-hap-txt">لەرزین (Haptic)</b></div>
+                    <div class="toggle-switch active" id="toggle-haptic" onclick="toggleOption('haptic'); triggerHaptic();"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🎨</i> <b style="font-size:12px;" id="set-theme-txt">ڕووکاری یانە (Theme)</b></div>
+                    <div class="toggle-switch" id="toggle-theme" onclick="toggleOption('theme'); triggerHaptic();"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🌐</i> <b style="font-size:12px;" id="set-lang-txt">زمان (Language)</b></div>
+                    <span style="color:var(--primary); font-weight:900; cursor:pointer; background:rgba(255,255,255,0.05); padding:5px 12px; border-radius:8px;" onclick="toggleLang(); triggerHaptic();" id="lang-btn-txt">کوردی / KU</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🔔</i> <b style="font-size:12px;" id="set-notif-txt">ئاگادارکردنەوە (Push)</b></div>
+                    <span style="color:var(--warning); font-weight:900; cursor:pointer;" onclick="requestPush(); triggerHaptic();" id="notif-btn-txt">پێدانی مۆڵەت</span>
+                </div>
+
+                <div id="install-app-btn" style="display:none; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer;" onclick="installPWA(); triggerHaptic();" onmouseover="this.style.background='rgba(16, 185, 129, 0.05)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(16, 185, 129, 0.1); color:var(--primary); padding:8px; border-radius:10px;">📲</i> <b style="font-size:12px; color:var(--primary);" id="set-inst-txt">دابەزاندنی ئەپەکە لەسەر مۆبایل</b></div>
                     <span style="color:var(--primary); font-weight:900;">Install</span>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer;" onclick="changeUsername()" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">✏️</i> <b style="font-size:12px;">گۆڕینی ناوی بەکارهێنەر</b></div>
-                    <span style="color:var(--primary); font-weight:900;">گۆڕین</span>
+                <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer;" onclick="changeUsername(); triggerHaptic();" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">✏️</i> <b style="font-size:12px;" id="set-name-txt">گۆڕینی ناوی بەکارهێنەر</b></div>
+                    <span style="color:var(--primary); font-weight:900;" id="set-change-txt">گۆڕین</span>
                 </div>
                 
                 <div style="display:flex; justify-content:space-between; padding:20px; border-bottom:1px solid rgba(255,255,255,0.03);">
-                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🛠️</i> <b style="font-size:12px;">خاوەن و پەرەپێدەر</b></div>
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(255,255,255,0.1); padding:8px; border-radius:10px;">🛠️</i> <b style="font-size:12px;" id="set-dev-txt">خاوەن و پەرەپێدەر</b></div>
                     <span style="color:var(--warning); font-weight:900;">JUDY SHAKR</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; padding:20px; cursor:pointer; transition:0.3s;" onclick="clearDataAndLogout()" onmouseover="this.style.background='rgba(244, 63, 94, 0.05)'" onmouseout="this.style.background='transparent'">
-                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(244, 63, 94, 0.1); color:var(--danger); padding:8px; border-radius:10px;">🚪</i> <b style="color:var(--danger); font-size:12px;">چوونەدەرەوە و سڕینەوە</b></div>
+                <div style="display:flex; justify-content:space-between; padding:20px; cursor:pointer; transition:0.3s;" onclick="clearDataAndLogout(); triggerHaptic();" onmouseover="this.style.background='rgba(244, 63, 94, 0.05)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; align-items:center; gap:12px;"><i style="background:rgba(244, 63, 94, 0.1); color:var(--danger); padding:8px; border-radius:10px;">🚪</i> <b style="color:var(--danger); font-size:12px;" id="set-out-txt">چوونەدەرەوە و سڕینەوە</b></div>
                     <span style="color:var(--danger); opacity:0.7; font-size:10px; font-weight:800;">Logout</span>
                 </div>
             </div>
@@ -369,18 +388,18 @@
     </main>
 
     <nav>
-        <div class="nav-link active" onclick="switchView('v-home', this)"><i>🏠</i><span>سەرەکی</span></div>
-        <div class="nav-link" onclick="switchView('v-standings', this)"><i>🏆</i><span>ڕیزبەندی</span></div>
-        <div class="nav-link" onclick="switchView('v-chat', this)"><i>💬</i><span>چات</span></div>
-        <div class="nav-link" onclick="switchView('v-teams', this)"><i>🛡️</i><span>یانەکان</span></div>
-        <div class="nav-link" onclick="switchView('v-leaderboard', this)"><i>🏅</i><span>گۆڵکاران</span></div>
-        <div class="nav-link" onclick="switchView('v-top-predictors', this)"><i>👑</i><span>پێشبینیکار</span></div>
-        <div class="nav-link" onclick="switchView('v-settings', this)"><i>⚙️</i><span>ڕێکخستن</span></div>
+        <div class="nav-link active" onclick="switchView('v-home', this); triggerHaptic();"><i>🏠</i><span id="nav-home-txt">سەرەکی</span></div>
+        <div class="nav-link" onclick="switchView('v-standings', this); triggerHaptic();"><i>🏆</i><span id="nav-standings-txt">ڕیزبەندی</span></div>
+        <div class="nav-link" onclick="switchView('v-chat', this); triggerHaptic();"><i>💬</i><span id="nav-chat-txt">چات</span></div>
+        <div class="nav-link" onclick="switchView('v-teams', this); triggerHaptic();"><i>🛡️</i><span id="nav-teams-txt">یانەکان</span></div>
+        <div class="nav-link" onclick="switchView('v-fantasy', this); triggerHaptic();"><i>🎮</i><span id="nav-fantasy-txt">فانتازی</span></div>
+        <div class="nav-link" onclick="switchView('v-top-predictors', this); triggerHaptic();"><i>👑</i><span id="nav-top-txt">پێشبینیکار</span></div>
+        <div class="nav-link" onclick="switchView('v-settings', this); triggerHaptic();"><i>⚙️</i><span id="nav-set-txt">ڕێکخستن</span></div>
     </nav>
 
     <div id="squad-modal" class="modal">
         <div class="modal-header">
-            <button class="btn-close" onclick="closeModal()">✕</button>
+            <button class="btn-close" onclick="closeModal('squad-modal'); triggerHaptic();">✕</button>
             <div style="display:flex; align-items:center; gap:15px; flex:1;">
                 <div style="background:#fff; padding:5px; border-radius:12px;"><img id="modal-team-logo" src="" style="width:40px; height:40px; object-fit:contain;"></div>
                 <div>
@@ -391,6 +410,28 @@
         </div>
         <div id="modal-content" style="padding:20px; padding-bottom:100px;">
             <div class="loader-box"><div class="spinner"></div>هێنانی زانیاری پێکهاتە...</div>
+        </div>
+    </div>
+
+    <div id="public-profile-modal" class="modal">
+        <div class="modal-header">
+            <button class="btn-close" onclick="closeModal('public-profile-modal'); triggerHaptic();">✕</button>
+            <h2 style="font-size:16px; font-weight:900; color:#fff; text-align:center; flex:1;" id="pub-prof-title">پڕۆفایلی بەکارهێنەر</h2>
+            <div style="width:40px;"></div>
+        </div>
+        <div style="padding:20px; padding-bottom:100px;">
+            <div class="settings-user-card" style="margin-top:20px;">
+                <div class="points-badge" id="pub-points">0 PTS</div>
+                <div style="width:90px; height:90px; background:linear-gradient(135deg, var(--primary), #059669); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:#fff; border:6px solid rgba(255,255,255,0.05); box-shadow:0 10px 20px rgba(0,0,0,0.3); position:relative; overflow:hidden;">
+                    <div id="pub-avatar-icon" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;">👤</div>
+                    <div style="position:absolute; bottom:0; right:0; width:25px; height:25px; background:var(--warning); border-radius:50%; border:3px solid var(--secondary); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; color:#000; z-index:10;" id="pub-level-icon">1</div>
+                </div>
+                <h2 id="pub-user-name" style="font-size:24px; font-weight:900; margin-bottom:5px;">...</h2>
+                <p style="color:var(--sub); font-size:11px; font-weight:800; margin-bottom:10px;" id="pub-user-badge">Novice</p>
+                <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
+                    <span id="pub-fav-team" style="background:rgba(255,255,255,0.05); padding:8px 15px; border-radius:12px; font-weight:800; font-size:11px; display:flex; align-items:center; gap:8px;">-</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -440,7 +481,17 @@
             friends: [],
             predictions: {},
             lastRewardDate: "",
-            profilePic: ""
+            profilePic: "",
+            haptic: true,
+            theme: false,
+            lang: 'ku',
+            fantasySquad: []
+        };
+
+        const themeColors = {
+            86: '#eab308', 81: '#f43f5e', 65: '#38bdf8', 5: '#dc2626', 
+            524: '#1d4ed8', 108: '#2563eb', 64: '#ef4444', 73: '#cbd5e1', 
+            109: '#ffffff', 66: '#dc2626', 4: '#facc15', 78: '#ef4444'
         };
 
         const TEAMS = [
@@ -460,6 +511,31 @@
 
         const posKurdish = { "Goalkeeper": "گۆڵپارێز", "Defence": "بەرگریکار", "Midfield": "ناوەڕاست", "Offence": "هێرشبەر", "Coach": "ڕاهێنەر" };
         let activeChatRef = null;
+        let isAppInit = false;
+
+        function triggerHaptic() {
+            if (userData.haptic !== false && window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(40);
+            }
+        }
+
+        function pushNotify(title, body) {
+            if (Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: 'icon-192.png' });
+            }
+        }
+
+        function requestPush() {
+            if (!("Notification" in window)) {
+                showToast("وێبگەڕەکەت پشتگیری ئاگادارکردنەوە ناکات", "error");
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                    if (permission === "granted") {
+                        showToast("ئاگادارکردنەوە کارا کرا", "success");
+                    }
+                });
+            }
+        }
 
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -473,29 +549,40 @@
         window.onload = () => {
             const grid = document.getElementById('fav-selector');
             grid.innerHTML = TEAMS.map(t => `
-                <div class="fav-option" id="fav-opt-${t.id}" onclick="selectFav(${t.id}, '${t.name}', '${t.logo}')">
+                <div class="fav-option" id="fav-opt-${t.id}" onclick="selectFav(${t.id}, '${t.name}', '${t.logo}'); triggerHaptic();">
                     <img src="${t.logo}" alt="${t.name}">
                 </div>
             `).join('');
 
+            // Bug fix: Real-time listener for user profile and points
+            const storedUid = localStorage.getItem('havnka_uid');
             auth.onAuthStateChanged((user) => {
-                if (user) {
-                    db.ref('users/' + user.uid).once('value').then((snapshot) => {
+                const uid = user ? user.uid : storedUid;
+                if (uid) {
+                    db.ref('users/' + uid).on('value', (snapshot) => {
                         if (snapshot.exists()) {
                             userData = snapshot.val();
-                            proceedToApp(userData.name, true);
-                        } else if(user.displayName) {
+                            if(!isAppInit) {
+                                proceedToApp(userData.name, true);
+                                isAppInit = true;
+                            } else {
+                                updatePointsUI();
+                                updateProfileImages();
+                                applyTheme();
+                                applyLanguage();
+                            }
+                        } else if(user && user.displayName) {
                             userData.uid = user.uid;
                             userData.name = user.displayName;
                             proceedToApp(userData.name, true);
+                            isAppInit = true;
                         }
                     });
                 }
             });
             
-            setInterval(() => loadLeaderboardsLive('PD'), 300000);
-            
             listenToTopPredictors();
+            renderFantasyMarket();
         };
 
         function selectFav(id, name, logo) {
@@ -519,17 +606,18 @@
             auth.signInAnonymously().then((result) => {
                 const user = result.user;
                 userData.uid = user.uid;
+                localStorage.setItem('havnka_uid', user.uid); // BUG FIX: Save guest locally
                 db.ref('users/' + user.uid).once('value').then((snapshot) => {
                     if (snapshot.exists()) {
                         userData = snapshot.val();
                         saveUserDataToDB();
-                        proceedToApp(userData.name, false);
+                        if(!isAppInit){ proceedToApp(userData.name, false); isAppInit = true; }
                     } else {
                         userData.name = nameInput;
                         userData.points = 0;
                         userData.level = 1;
                         saveUserDataToDB();
-                        proceedToApp(userData.name, false);
+                        if(!isAppInit){ proceedToApp(userData.name, false); isAppInit = true; }
                     }
                 });
             }).catch((err) => {
@@ -549,17 +637,18 @@
             auth.signInWithPopup(googleProvider).then((result) => {
                 const user = result.user;
                 userData.uid = user.uid;
+                localStorage.setItem('havnka_uid', user.uid);
                 db.ref('users/' + user.uid).once('value').then((snapshot) => {
                     if (snapshot.exists()) {
                         userData = snapshot.val();
                         saveUserDataToDB();
-                        proceedToApp(userData.name, false);
+                        if(!isAppInit){ proceedToApp(userData.name, false); isAppInit = true; }
                     } else {
                         userData.name = user.displayName || "Google User";
                         userData.points = 0;
                         userData.level = 1;
                         saveUserDataToDB();
-                        proceedToApp(userData.name, false);
+                        if(!isAppInit){ proceedToApp(userData.name, false); isAppInit = true; }
                     }
                 });
             }).catch((err) => {
@@ -570,7 +659,7 @@
         }
 
         function saveUserDataToDB() {
-            const currentUid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : userData.uid;
+            const currentUid = userData.uid || localStorage.getItem('havnka_uid');
             if(currentUid) {
                 userData.uid = currentUid;
                 return db.ref('users/' + currentUid).set(userData);
@@ -610,6 +699,56 @@
             }
         }
 
+        function toggleOption(opt) {
+            if(opt === 'haptic') {
+                userData.haptic = userData.haptic === false ? true : false;
+                document.getElementById('toggle-haptic').className = `toggle-switch ${userData.haptic !== false ? 'active' : ''}`;
+            } else if (opt === 'theme') {
+                userData.theme = userData.theme === true ? false : true;
+                document.getElementById('toggle-theme').className = `toggle-switch ${userData.theme === true ? 'active' : ''}`;
+                applyTheme();
+            }
+            saveUserDataToDB();
+        }
+
+        function applyTheme() {
+            if(userData.theme && userData.favTeam && themeColors[userData.favTeam.id]) {
+                const col = themeColors[userData.favTeam.id];
+                document.documentElement.style.setProperty('--primary', col);
+                document.documentElement.style.setProperty('--primary-glow', col + '33');
+            } else {
+                document.documentElement.style.setProperty('--primary', '#10b981');
+                document.documentElement.style.setProperty('--primary-glow', 'rgba(16, 185, 129, 0.2)');
+            }
+        }
+
+        function toggleLang() {
+            userData.lang = userData.lang === 'en' ? 'ku' : 'en';
+            saveUserDataToDB();
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const isEn = userData.lang === 'en';
+            document.getElementById('lang-btn-txt').innerText = isEn ? "English / EN" : "کوردی / KU";
+            
+            // Nav
+            document.getElementById('nav-home-txt').innerText = isEn ? "Home" : "سەرەکی";
+            document.getElementById('nav-standings-txt').innerText = isEn ? "Standings" : "ڕیزبەندی";
+            document.getElementById('nav-chat-txt').innerText = isEn ? "Chat" : "چات";
+            document.getElementById('nav-teams-txt').innerText = isEn ? "Teams" : "یانەکان";
+            document.getElementById('nav-fantasy-txt').innerText = isEn ? "Fantasy" : "فانتازی";
+            document.getElementById('nav-top-txt').innerText = isEn ? "Top 1" : "پێشبینیکار";
+            document.getElementById('nav-set-txt').innerText = isEn ? "Settings" : "ڕێکخستن";
+            
+            // Toggles Set
+            document.getElementById('toggle-haptic').className = `toggle-switch ${userData.haptic !== false ? 'active' : ''}`;
+            document.getElementById('toggle-theme').className = `toggle-switch ${userData.theme === true ? 'active' : ''}`;
+            
+            // Fantasy
+            document.getElementById('fantasy-budget-txt').innerText = isEn ? "Your Budget:" : "بوودجەی تۆ:";
+        }
+
         function proceedToApp(nameInput, isAuto) {
             document.getElementById('settings-user-name').innerText = userData.name;
             document.getElementById('home-fav-name').innerText = userData.favTeam.name;
@@ -617,6 +756,8 @@
             document.getElementById('settings-fav-team').innerHTML = `<img src="${userData.favTeam.logo}" style="width:20px;"> ${userData.favTeam.name}`;
             
             updateProfileImages();
+            applyTheme();
+            applyLanguage();
 
             const today = new Date().toISOString().split('T')[0];
             if (userData.lastRewardDate !== today) {
@@ -632,13 +773,13 @@
             loadLiveMatches();
             loadStats('PD');
             loadTeams('PD');
-            loadLeaderboardsLive('PD');
 
             switchChatMode('friends', document.querySelector('.chat-action-btn'));
         }
 
         function clearDataAndLogout() {
-            if(confirm("ئایا دڵنیایت دەتەوێت بچیتە دەرەوە و داتاکانت بسڕیتەوە؟")) {
+            if(confirm(userData.lang === 'en' ? "Are you sure you want to logout?" : "ئایا دڵنیایت دەتەوێت بچیتە دەرەوە و داتاکانت بسڕیتەوە؟")) {
+                localStorage.removeItem('havnka_uid');
                 auth.signOut().then(() => {
                     location.reload();
                 });
@@ -646,14 +787,14 @@
         }
 
         async function changeUsername() {
-            const newName = prompt("ناوی نوێ بنووسە (بە لایەنی کەم 3 پیت):", userData.name);
+            const newName = prompt(userData.lang === 'en' ? "Enter new name (min 3 chars):" : "ناوی نوێ بنووسە (بە لایەنی کەم 3 پیت):", userData.name);
             if (!newName || newName.trim().length < 3) return;
             const cleanName = newName.trim();
             if (cleanName === userData.name) return;
             
             const snap = await db.ref('users').orderByChild('name').equalTo(cleanName).once('value');
             if (snap.exists()) {
-                showToast("ئەم ناوە پێشتر بەکارهاتووە لەلایەن کەسێکی ترەوە!", "error");
+                showToast(userData.lang === 'en' ? "Name already taken!" : "ئەم ناوە پێشتر بەکارهاتووە لەلایەن کەسێکی ترەوە!", "error");
                 return;
             }
             
@@ -664,7 +805,7 @@
             }
             saveUserDataToDB();
             document.getElementById('settings-user-name').innerText = userData.name;
-            showToast("ناوەکەت بە سەرکەوتوویی گۆڕدرا بۆ: " + cleanName, "success");
+            showToast((userData.lang === 'en' ? "Name changed to: " : "ناوەکەت بە سەرکەوتوویی گۆڕدرا بۆ: ") + cleanName, "success");
         }
 
         async function fetchAPI(endpoint) {
@@ -726,6 +867,7 @@
                         if(parseInt(userData.predictions[pKey].h) === actualH && parseInt(userData.predictions[pKey].a) === actualA) {
                             updateXP(20, "پێشبینی ڕاست");
                             showToast(`پێشبینیت بۆ یاری (${m.homeTeam.shortName}) ڕاست دەرچوو! +20 خاڵ`, "success");
+                            pushNotify("پێشبینی ڕاست!", `پێشبینیت بۆ یاری ${m.homeTeam.shortName} ڕاست بوو +20 خاڵ`);
                         } else {
                             showToast(`پێشبینیت بۆ یاری (${m.homeTeam.shortName}) هەڵە بوو. ئەنجام: ${actualH}-${actualA}`, "error");
                         }
@@ -754,7 +896,7 @@
                 const isPredicted = userData.predictions && userData.predictions[`match_${m.id}`];
                 const btnState = isPredicted ? 'لە پێشبینیدایە ✓' : 'ناردنی پێشبینی 🚀';
                 const btnColor = isPredicted ? 'var(--primary)' : 'var(--warning)';
-                const btnClick = isPredicted ? '' : `onclick="submitPrediction(${m.id}, this)"`;
+                const btnClick = isPredicted ? '' : `onclick="submitPrediction(${m.id}, this); triggerHaptic();"`;
                 const isLive = (m.status === 'IN_PLAY' || m.status === 'PAUSED');
 
                 return `
@@ -787,6 +929,7 @@
             if(newLevel > userData.level) {
                 userData.level = newLevel;
                 showToast(`پیرۆزە! گەیشتیتە ئاستی ${userData.level} 🎉`, 'success');
+                pushNotify("ئاستت بەرزبووەوە!", `گەیشتیتە ئاستی ${userData.level}`);
             }
             
             if(userData.level >= 20) userData.badge = "🏆 HAVNKA KING";
@@ -795,7 +938,6 @@
             else if(userData.level >= 5) userData.badge = "🌟 Advanced";
             else userData.badge = "🌱 Novice";
 
-            updatePointsUI();
             saveUserDataToDB();
             if(reason) showToast(`+${amount} XP (${reason})`);
         }
@@ -827,6 +969,7 @@
         function updatePointsUI() {
             document.getElementById('points-display-header').innerText = `${userData.points} PTS`;
             document.getElementById('settings-points').innerText = `${userData.points} PTS`;
+            document.getElementById('fantasy-user-points').innerText = `${userData.points} PTS`;
             document.getElementById('user-level-tag').innerText = `LEVEL ${userData.level}`;
             document.getElementById('user-level-icon').innerText = userData.level;
             document.getElementById('settings-user-badge').innerText = userData.badge;
@@ -852,7 +995,7 @@
                                 <div style="width:45px; height:45px; background:linear-gradient(135deg, var(--secondary), var(--primary-glow)); border:1px solid rgba(16,185,129,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); font-size:16px;">${f.charAt(0).toUpperCase()}</div>
                                 <div><b style="font-size:14px; color:#fff;">${f}</b><span style="display:block; font-size:9px; color:var(--success);">Online</span></div>
                             </div>
-                            <button onclick="openPrivateChat('${f}')" style="background:var(--primary); color:#fff; border:none; padding:10px 18px; border-radius:12px; font-weight:900; font-size:11px;">نامە</button>
+                            <button onclick="openPrivateChat('${f}'); triggerHaptic();" style="background:var(--primary); color:#fff; border:none; padding:10px 18px; border-radius:12px; font-weight:900; font-size:11px;">نامە</button>
                         </div>
                     `).join('') + `</div>`;
                 }
@@ -864,7 +1007,7 @@
                             <h4 style="color:var(--primary); margin-bottom:15px; font-size:13px;">زیادکردنی هاوڕێی نوێ</h4>
                             <div class="add-friend-box" style="padding:0; border:none; background:transparent;">
                                 <input type="text" id="find-user" class="friend-input" placeholder="ناوی هاوڕێ (نمونە: هێمن)...">
-                                <button onclick="addFriendAction()" style="background:var(--warning); border:none; color:#000; padding:0 25px; border-radius:12px; font-weight:900; cursor:pointer;">گەران</button>
+                                <button onclick="addFriendAction(); triggerHaptic();" style="background:var(--warning); border:none; color:#000; padding:0 25px; border-radius:12px; font-weight:900; cursor:pointer;">گەران</button>
                             </div>
                         </div>
                     </div>`;
@@ -878,9 +1021,14 @@
                 
                 document.getElementById('chat-box').innerHTML = '';
                 activeChatRef = db.ref('chats/group');
+                let firstLoad = true;
                 activeChatRef.limitToLast(50).on('child_added', (snap) => {
                     renderMessage(snap.val());
+                    if(!firstLoad && snap.val().sender !== userData.name) {
+                        pushNotify("نامەی نوێ", `${snap.val().sender}: ${snap.val().text}`);
+                    }
                 });
+                setTimeout(() => { firstLoad = false; }, 2000);
             }
         }
 
@@ -920,7 +1068,7 @@
             inputArea.style.display = 'flex';
             inputArea.dataset.mode = `private_${user}`; 
             
-            content.innerHTML = `<div style="padding:15px; background:rgba(0,0,0,0.3); display:flex; align-items:center; gap:15px; border-bottom:var(--border);"><button onclick="switchChatMode('friends', document.querySelectorAll('.chat-action-btn')[0])" style="background:transparent; border:none; color:var(--primary); font-size:20px; cursor:pointer;">←</button><b style="color:#fff;">${user}</b></div><div class="chat-messages" id="chat-box"><div class="loader-box"><div class="spinner"></div></div></div>`;
+            content.innerHTML = `<div style="padding:15px; background:rgba(0,0,0,0.3); display:flex; align-items:center; gap:15px; border-bottom:var(--border);"><button onclick="switchChatMode('friends', document.querySelectorAll('.chat-action-btn')[0]); triggerHaptic();" style="background:transparent; border:none; color:var(--primary); font-size:20px; cursor:pointer;">←</button><b style="color:#fff;">${user}</b></div><div class="chat-messages" id="chat-box"><div class="loader-box"><div class="spinner"></div></div></div>`;
 
             if(activeChatRef) { activeChatRef.off(); activeChatRef = null; }
 
@@ -972,54 +1120,33 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        // STANDINGS NOW INCLUDES SCORERS (MERGED AS REQUESTED)
         async function loadStats(code, btn) {
             if(btn) { document.querySelectorAll('#v-standings .league-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
             const container = document.getElementById('standings-data');
             container.innerHTML = '<div class="loader-box"><div class="spinner"></div>وەگرتنی ڕیزبەندی...</div>';
             
-            const data = await fetchAPI(`competitions/${code}/standings`);
-            if(!data) { container.innerHTML = '<div style="text-align:center; color:var(--danger); padding:30px;">کێشە لە هێنانی داتا هەیە.</div>'; return; }
-
-            let html = `<div style="overflow-x:auto; border-radius:25px; margin-bottom:30px; box-shadow:0 10px 30px rgba(0,0,0,0.3);"><table style="width:100%; border-collapse:collapse; background:var(--card); min-width:400px;"><thead style="background:rgba(255,255,255,0.05); color:var(--sub); font-size:10px;"><tr><th style="padding:15px; text-align:center;">#</th><th style="text-align:right;">یانە</th><th>Y</th><th>B</th><th>D</th><th>D</th><th style="color:var(--primary);">X</th></tr></thead><tbody>`;
+            const [sData, pData] = await Promise.all([
+                fetchAPI(`competitions/${code}/standings`),
+                fetchAPI(`competitions/${code}/scorers`)
+            ]);
             
-            data.standings[0].table.slice(0, 20).forEach((t, i) => {
-                let posStyle = i < 4 ? "background:rgba(16,185,129,0.1); color:var(--success);" : (i >= data.standings[0].table.length - 3 ? "background:rgba(244,63,94,0.1); color:var(--danger);" : "");
+            if(!sData) { container.innerHTML = '<div style="text-align:center; color:var(--danger); padding:30px;">کێشە لە هێنانی داتا هەیە.</div>'; return; }
+
+            let html = `<div class="stats-title" style="margin-top:0;"><i>🏆</i> ڕیزبەندی یانەکان</div><div style="overflow-x:auto; border-radius:25px; margin-bottom:30px; box-shadow:0 10px 30px rgba(0,0,0,0.3);"><table style="width:100%; border-collapse:collapse; background:var(--card); min-width:400px;"><thead style="background:rgba(255,255,255,0.05); color:var(--sub); font-size:10px;"><tr><th style="padding:15px; text-align:center;">#</th><th style="text-align:right;">یانە</th><th>Y</th><th>B</th><th>D</th><th>D</th><th style="color:var(--primary);">X</th></tr></thead><tbody>`;
+            
+            sData.standings[0].table.slice(0, 20).forEach((t, i) => {
+                let posStyle = i < 4 ? "background:rgba(16,185,129,0.1); color:var(--success);" : (i >= sData.standings[0].table.length - 3 ? "background:rgba(244,63,94,0.1); color:var(--danger);" : "");
                 html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.02);"><td style="padding:15px; text-align:center;"><span style="display:inline-block; padding:3px 8px; border-radius:8px; font-weight:900; ${posStyle}">${t.position}</span></td><td style="display:flex; align-items:center; gap:12px; padding:15px;"><img src="${t.team.crest}" style="width:25px; height:25px; object-fit:contain;"> <b style="font-size:12px;">${t.team.shortName}</b></td><td style="text-align:center; color:var(--sub);">${t.playedGames}</td><td style="text-align:center; color:var(--success);">${t.won}</td><td style="text-align:center; color:var(--warning);">${t.draw}</td><td style="text-align:center; color:var(--danger);">${t.lost}</td><td style="text-align:center; color:var(--primary); font-weight:900; background:rgba(16,185,129,0.05);">${t.points}</td></tr>`;
             });
-            container.innerHTML = html + `</tbody></table></div>`;
-        }
+            html += `</tbody></table></div>`;
 
-        async function loadLeaderboardsLive(code = 'PD', btn = null) {
-            if(btn) { 
-                document.querySelectorAll('#v-leaderboard .league-tab').forEach(t => t.classList.remove('active')); 
-                btn.classList.add('active'); 
-            }
-            
-            const teamsBox = document.getElementById('top-teams-data');
-            const playersBox = document.getElementById('top-players-data');
-            
-            teamsBox.innerHTML = '<div class="loader-box"><div class="spinner"></div></div>';
-            playersBox.innerHTML = '<div class="loader-box"><div class="spinner"></div></div>';
-
-            const sData = await fetchAPI(`competitions/${code}/standings`);
-            if(sData && sData.standings) {
-                let tHtml = `<div style="overflow-x:auto; border-radius:20px; background:var(--card); margin-bottom:25px; border:var(--border);"><table style="width:100%; border-collapse:collapse;"><thead style="background:rgba(255,255,255,0.05); color:var(--sub); font-size:10px;"><tr><th style="padding:12px; text-align:center;">ڕیز</th><th style="text-align:right;">یانە</th><th style="padding:12px; text-align:center;">خاڵ</th></tr></thead><tbody>`;
-                sData.standings[0].table.slice(0, 10).forEach(t => {
-                    tHtml += `<tr style="border-bottom:1px solid rgba(255,255,255,0.02);"><td style="padding:12px; text-align:center; font-weight:900;">${t.position}</td><td style="display:flex; align-items:center; gap:10px; padding:12px;"><img src="${t.team.crest}" style="width:22px; height:22px;"> <b style="font-size:12px;">${t.team.shortName}</b></td><td style="text-align:center; color:var(--primary); font-weight:900; background:rgba(16,185,129,0.05);">${t.points}</td></tr>`;
-                });
-                teamsBox.innerHTML = tHtml + `</tbody></table></div>`;
-            } else {
-                teamsBox.innerHTML = '<div style="text-align:center; color:var(--danger);">نەتوانرا داتا بهێنرێت.</div>';
-            }
-
-            const pData = await fetchAPI(`competitions/${code}/scorers`);
             if(pData && pData.scorers) {
-                let pHtml = ``;
+                html += `<div class="stats-title"><i>🔥</i> باشترین گۆڵکاران و ئەسیست</div>`;
                 pData.scorers.slice(0, 10).forEach((s, i) => {
                     let medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `<b style="color:var(--sub);">${i+1}</b>`));
                     let assists = s.assists !== undefined && s.assists !== null ? s.assists : '-';
-                    
-                    pHtml += `
+                    html += `
                     <div class="player-row" style="margin-bottom:10px; border:1px solid rgba(245, 158, 11, 0.15); background:linear-gradient(135deg, var(--card), rgba(245,158,11,0.03));">
                         <div style="display:flex; align-items:center; gap:15px;">
                             <div style="width:30px; text-align:center; font-size:18px;">${medal}</div>
@@ -1029,19 +1156,64 @@
                             </div>
                         </div>
                         <div style="display:flex; gap:8px;">
-                            <div class="p-val" style="background:var(--warning); color:#000; border:none; box-shadow:0 4px 10px rgba(245,158,11,0.2);">
-                                ${s.goals || 0} <span style="font-size:8px;">⚽</span>
-                            </div>
-                            <div class="p-val" style="background:var(--primary-glow); color:var(--primary); border:none;">
-                                ${assists} <span style="font-size:8px;">🎯</span>
-                            </div>
+                            <div class="p-val" style="background:var(--warning); color:#000; border:none; box-shadow:0 4px 10px rgba(245,158,11,0.2);">${s.goals || 0} <span style="font-size:8px;">⚽</span></div>
+                            <div class="p-val" style="background:var(--primary-glow); color:var(--primary); border:none;">${assists} <span style="font-size:8px;">🎯</span></div>
                         </div>
                     </div>`;
                 });
-                playersBox.innerHTML = pHtml;
-            } else {
-                playersBox.innerHTML = '<div style="text-align:center; color:var(--danger);">نەتوانرا داتا بهێنرێت.</div>';
             }
+            container.innerHTML = html;
+        }
+
+        // FANTASY LEAGUE SYSTEM
+        function renderFantasyMarket() {
+            const list = document.getElementById('fantasy-market-list');
+            const players = [
+                { id: 1, name: "Lionel Messi", pos: "هێرشبەر", price: 500, img: "https://crests.football-data.org/1066.png" },
+                { id: 2, name: "Kylian Mbappé", pos: "هێرشبەر", price: 450, img: "https://crests.football-data.org/86.png" },
+                { id: 3, name: "Erling Haaland", pos: "هێرشبەر", price: 400, img: "https://crests.football-data.org/65.png" },
+                { id: 4, name: "Jude Bellingham", pos: "ناوەڕاست", price: 300, img: "https://crests.football-data.org/86.png" },
+                { id: 5, name: "Kevin De Bruyne", pos: "ناوەڕاست", price: 350, img: "https://crests.football-data.org/65.png" },
+                { id: 6, name: "Virgil van Dijk", pos: "بەرگریکار", price: 200, img: "https://crests.football-data.org/64.png" }
+            ];
+
+            if(!userData.fantasySquad) userData.fantasySquad = [];
+
+            list.innerHTML = players.map(p => {
+                const isOwned = userData.fantasySquad.includes(p.id);
+                const btnText = isOwned ? (userData.lang === 'en' ? 'Owned ✓' : 'کڕدراوە ✓') : `${p.price} PTS`;
+                const btnColor = isOwned ? 'var(--primary)' : 'var(--warning)';
+                
+                return `
+                <div class="fantasy-card">
+                    <img src="${p.img}" style="width:40px; height:40px; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));">
+                    <b style="color:#fff; font-size:12px;">${p.name}</b>
+                    <span style="font-size:9px; color:var(--sub);">${p.pos}</span>
+                    <button class="fantasy-buy-btn" style="background:${btnColor}; color:${isOwned?'#fff':'#000'};" ${isOwned ? '' : `onclick="buyFantasyPlayer(${p.id}, ${p.price}, this); triggerHaptic();"`}>
+                        ${btnText}
+                    </button>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function buyFantasyPlayer(id, price, btn) {
+            if(userData.points < price) {
+                showToast(userData.lang === 'en' ? "Not enough points!" : "خاڵی پێویستت نییە بۆ کڕینی ئەم یاریزانە!", "error");
+                return;
+            }
+            if(!userData.fantasySquad) userData.fantasySquad = [];
+            
+            userData.points -= price;
+            userData.fantasySquad.push(id);
+            saveUserDataToDB();
+            updatePointsUI();
+            
+            btn.style.background = 'var(--primary)';
+            btn.style.color = '#fff';
+            btn.innerText = userData.lang === 'en' ? 'Owned ✓' : 'کڕدراوە ✓';
+            btn.onclick = null;
+            showToast(userData.lang === 'en' ? "Player bought!" : "یاریزانەکە کڕدرا!", "success");
         }
 
         async function loadTeams(code, btn) {
@@ -1091,14 +1263,18 @@
             content.innerHTML = h;
         }
 
+        let allUsersData = {}; // Cache for public profiles
         function listenToTopPredictors() {
             db.ref('users').orderByChild('points').limitToLast(10).on('value', snapshot => {
                 const container = document.getElementById('top-predictors-list');
-                if(!container) return; // FIXED BUG: Always listen to updates securely!
+                if(!container) return; 
                 
                 let users = [];
                 snapshot.forEach(child => {
-                    users.push(child.val());
+                    const u = child.val();
+                    u.uid_key = child.key; // store key for profile lookup
+                    users.push(u);
+                    allUsersData[child.key] = u; 
                 });
                 users.reverse();
                 
@@ -1115,7 +1291,7 @@
                     let avatarHtml = u.profilePic ? `<img src="${u.profilePic}" style="width:100%;height:100%;object-fit:cover;">` : rankIcon;
 
                     html += `
-                    <div class="player-row" style="margin-bottom:12px; border:1px solid rgba(255,255,255,0.05); ${cardStyle}">
+                    <div class="player-row" style="margin-bottom:12px; border:1px solid rgba(255,255,255,0.05); ${cardStyle}" onclick="openPublicProfile('${u.uid_key}'); triggerHaptic();">
                         <div style="display:flex; align-items:center; gap:15px;">
                             <div style="width:35px; height:35px; border-radius:50%; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900; overflow:hidden; border:2px solid var(--primary); position:relative;">
                                 ${avatarHtml}
@@ -1135,6 +1311,31 @@
             });
         }
 
+        // PUBLIC PROFILE
+        function openPublicProfile(uid) {
+            const u = allUsersData[uid];
+            if(!u) return;
+            
+            document.getElementById('pub-points').innerText = `${u.points || 0} PTS`;
+            document.getElementById('pub-user-name').innerText = u.name;
+            document.getElementById('pub-user-badge').innerText = u.badge || 'Novice';
+            document.getElementById('pub-level-icon').innerText = u.level || 1;
+            
+            if(u.profilePic) {
+                document.getElementById('pub-avatar-icon').innerHTML = `<img src="${u.profilePic}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            } else {
+                document.getElementById('pub-avatar-icon').innerHTML = `👤`;
+            }
+
+            if(u.favTeam && u.favTeam.logo) {
+                document.getElementById('pub-fav-team').innerHTML = `<img src="${u.favTeam.logo}" style="width:20px;"> ${u.favTeam.name}`;
+            } else {
+                document.getElementById('pub-fav-team').innerHTML = '-';
+            }
+
+            document.getElementById('public-profile-modal').classList.add('open');
+        }
+
         function switchView(viewId, btn) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
@@ -1145,8 +1346,8 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function closeModal() {
-            document.getElementById('squad-modal').classList.remove('open');
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
         }
 
         let touchStartY = 0;
@@ -1169,9 +1370,9 @@
             if(ptr.classList.contains('ptr-visible')) {
                 ptr.classList.remove('ptr-visible');
                 showToast("داتاکان نوێکرانەوە...", "success");
+                triggerHaptic();
                 loadLiveMatches();
                 if(document.getElementById('v-standings').classList.contains('active')) loadStats('PD');
-                if(document.getElementById('v-leaderboard').classList.contains('active')) loadLeaderboardsLive('PD');
             }
             touchStartY = 0;
         });
